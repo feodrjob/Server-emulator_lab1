@@ -1,20 +1,4 @@
 package org.example.serveremulator.Services;
-/*getAllSubjects() - все дисциплины
-
-getSubjectById(Long id) - дисциплину по ID
-
-createSubject(Subject subject) - создать дисциплину
-
-updateSubject(Long id, Subject subjectDetails) - обновить дисциплину
-
-deleteSubject(Long id) - удалить дисциплину
-
-Особые условия:
-
-Проверять уникальность названия дисциплины
-
-При удалении проверять, не используется ли дисциплина в занятиях*/
-
 
 import jakarta.transaction.Transactional;
 import org.example.serveremulator.Entityes.Subject;
