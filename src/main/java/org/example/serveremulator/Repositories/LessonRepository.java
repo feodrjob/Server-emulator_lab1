@@ -8,12 +8,15 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.util.List;
 
+
 @Repository
 public interface LessonRepository extends JpaRepository<Lesson, Long> {
 
     List<Lesson> findByTeacherIdAndDateBetween(Long teacherId, LocalDate startDate, LocalDate endDate);
 
     List<Lesson> findByGroupIdAndDateBetween(Long groupId, LocalDate startDate, LocalDate endDate);
+
+    boolean existsByGroupIdAndDateAndLessonNumber(Long groupId, LocalDate date, Integer lessonNumber);
 
     @Modifying
     void deleteByTeacherId(Long teacherId);

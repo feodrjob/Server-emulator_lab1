@@ -30,21 +30,21 @@ public class TeacherService {
 
     public Teacher createTeacher(Teacher teacher) {
         if (teacher == null) {
-            throw new IllegalArgumentException("Teacher cannot be null, блядь");
+            throw new IllegalArgumentException("Teacher cannot be null");
         }
 
         if (teacher.getFirstName() == null || teacher.getFirstName().trim().isEmpty()) {
-            throw new IllegalArgumentException("First name is required, епта");
+            throw new IllegalArgumentException("First name is required");
         }
         if (teacher.getLastName() == null || teacher.getLastName().trim().isEmpty()) {
-            throw new IllegalArgumentException("Last name is required, нахуй");
+            throw new IllegalArgumentException("Last name is required");
         }
 
         if (teacherRepository.existsByName(
                 teacher.getLastName(),
                 teacher.getFirstName(),
                 teacher.getMidleName())) {
-            throw new IllegalArgumentException("Teacher already exists, бля");
+            throw new IllegalArgumentException("Teacher already exists");
         }
         return teacherRepository.save(teacher);
     }
