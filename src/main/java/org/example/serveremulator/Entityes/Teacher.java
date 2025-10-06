@@ -15,7 +15,7 @@ public class Teacher {
     private String lastName;
 
     @Column(name = "midle_name", nullable = false)
-    private String midleName;
+    private String middleName;
 
     @Column(name = "first_name", nullable = false)
     private String firstName;
@@ -24,7 +24,7 @@ public class Teacher {
 
     public Teacher(String lastName, String midleName, String firstName) {
         this.lastName = lastName;
-        this.midleName = midleName;
+        this.middleName = midleName;
         this.firstName = firstName;
     }
 
@@ -42,11 +42,11 @@ public class Teacher {
     }
 
     public String getMidleName() {
-        return midleName;
+        return middleName;
     }
 
     public void setMidleName(String midleName) {
-        this.midleName = midleName;
+        this.middleName = midleName;
     }
 
     public String getFirstName() {
@@ -61,11 +61,11 @@ public class Teacher {
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         Teacher teacher = (Teacher) o;
-        return Objects.equals(id, teacher.id) && Objects.equals(lastName, teacher.lastName) && Objects.equals(midleName, teacher.midleName) && Objects.equals(firstName, teacher.firstName);
+        return Objects.equals(id, teacher.id) && Objects.equals(lastName, teacher.lastName) && Objects.equals(middleName, teacher.middleName) && Objects.equals(firstName, teacher.firstName);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, lastName, midleName, firstName);
+        return Objects.hash(id, lastName, middleName, firstName);
     }
 }

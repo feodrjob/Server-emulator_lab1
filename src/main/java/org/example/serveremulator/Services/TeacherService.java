@@ -40,7 +40,7 @@ public class TeacherService {
             throw new IllegalArgumentException("Last name is required");
         }
 
-        if (teacherRepository.existsByName(
+        if (teacherRepository.existsByLastNameAndFirstNameAndMiddleName(
                 teacher.getLastName(),
                 teacher.getFirstName(),
                 teacher.getMidleName())) {
