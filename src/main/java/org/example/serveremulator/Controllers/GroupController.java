@@ -68,7 +68,7 @@ public class GroupController {
             return ResponseEntity.badRequest().build();
         }
     }
-    @PostMapping("/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteGroup(@PathVariable Long id) {
         try{
             groupService.deleteGroup(id);

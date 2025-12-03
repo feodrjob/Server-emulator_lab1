@@ -21,7 +21,7 @@ public class TeacherService {
         return teacherRepository.findAll();
     }
 
-    public Optional<Teacher> findById(Long id) {
+    public Optional <Teacher> findById(Long id) {
         if (id == null || id <= 0) {
             throw new IllegalArgumentException("id is null or id <= 0");
         }

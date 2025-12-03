@@ -16,7 +16,6 @@ public class GroupMapper {
 
     public GroupResponse toResponse (Group group){
         GroupResponse response = new GroupResponse();
-        response.setId(group.getId());
         response.setName(group.getName());
         return response;
     }
