@@ -4,6 +4,9 @@ import jakarta.transaction.Transactional;
 import org.example.serveremulator.Entityes.Attendance;
 import org.example.serveremulator.Entityes.Lesson;
 import org.example.serveremulator.Entityes.Student;
+import org.example.serveremulator.Enums.ErrorCode;
+import org.example.serveremulator.Exceptions.NotFoundException;
+import org.example.serveremulator.Exceptions.ValidationException;
 import org.example.serveremulator.Repositories.AttendanceRepository;
 import org.example.serveremulator.Repositories.LessonRepository;
 import org.example.serveremulator.Repositories.StudentRepository;
@@ -30,37 +33,61 @@ public class AttendanceService {
 
     public Attendance getAttendanceByLessonId(Long lessonId) {
         if (lessonId == null || lessonId <= 0) {
-            throw new IllegalArgumentException("Lesson ID cannot be null or negative");
+            throw new ValidationException(
+                    ErrorCode.VALIDATION_ERROR,
+                    "Lesson ID must be positive number"
+            );
         }
 
         return attendanceRepository.findByLessonId(lessonId)
-                .orElseThrow(() -> new IllegalArgumentException("Attendance not found for lesson id: " + lessonId));
+                .orElseThrow(() -> new NotFoundException(
+                        ErrorCode.ATTENDANCE_NOT_FOUND,
+                        "Attendance not found for lesson id: " + lessonId
+                ));
     }
 
     public Attendance createAttendance(Long lessonId, List<Long> presentStudentIds) {
         if (lessonId == null || lessonId <= 0) {
-            throw new IllegalArgumentException("Lesson ID cannot be null or negative");
+            throw new ValidationException(
+                    ErrorCode.VALIDATION_ERROR,
+                    "Lesson ID must be positive number"
+            );
         }
         if (presentStudentIds == null) {
-            throw new IllegalArgumentException("Student IDs cannot be null");
+            throw new ValidationException(
+                    ErrorCode.VALIDATION_ERROR,
+                    "Student IDs cannot be null"
+            );
         }
 
         Lesson lesson = lessonRepository.findById(lessonId)
-                .orElseThrow(() -> new IllegalArgumentException("Lesson not found with id: " + lessonId));
+                .orElseThrow(() -> new NotFoundException(
+                        ErrorCode.LESSON_NOT_FOUND,
+                        "Lesson not found with id: " + lessonId
+                ));
 
         if (attendanceRepository.findByLessonId(lessonId).isPresent()) {
-            throw new IllegalArgumentException("Attendance already exists for lesson id: " + lessonId);
+            throw new ValidationException(
+                    ErrorCode.ATTENDANCE_ALREADY_EXISTS,
+                    "Attendance already exists for lesson id: " + lessonId
+            );
         }
 
         // Получаем студентов и проверяем что они из нужной группы
         Set<Student> students = presentStudentIds.stream()
                 .map(studentId -> studentRepository.findById(studentId)
-                        .orElseThrow(() -> new IllegalArgumentException("Student not found with id: " + studentId)))
+                        .orElseThrow(() -> new NotFoundException(
+                                ErrorCode.STUDENT_NOT_FOUND,
+                                "Student not found with id: " + studentId
+                        )))
                 .collect(Collectors.toSet());
 
         for (Student student : students) {
             if (!student.getGroup().getId().equals(lesson.getGroup().getId())) {
-                throw new IllegalArgumentException("Student " + student.getId() + " is not from lesson's group");
+                throw new ValidationException(
+                        ErrorCode.STUDENT_NOT_IN_GROUP,
+                        "Student " + student.getId() + " is not from lesson's group"
+                );
             }
         }
 
@@ -72,25 +99,40 @@ public class AttendanceService {
 
     public Attendance updateAttendance(Long lessonId, List<Long> presentStudentIds) {
         if (lessonId == null || lessonId <= 0) {
-            throw new IllegalArgumentException("Lesson ID cannot be null or negative");
+            throw new ValidationException(
+                    ErrorCode.VALIDATION_ERROR,
+                    "Lesson ID must be positive number"
+            );
         }
         if (presentStudentIds == null) {
-            throw new IllegalArgumentException("Student IDs cannot be null");
+            throw new ValidationException(
+                    ErrorCode.VALIDATION_ERROR,
+                    "Student IDs cannot be null"
+            );
         }
 
         Attendance attendance = attendanceRepository.findByLessonId(lessonId)
-                .orElseThrow(() -> new IllegalArgumentException("Attendance not found for lesson id: " + lessonId));
+                .orElseThrow(() -> new NotFoundException(
+                        ErrorCode.ATTENDANCE_NOT_FOUND,
+                        "Attendance not found for lesson id: " + lessonId
+                ));
 
         Lesson lesson = attendance.getLesson();
 
         Set<Student> students = presentStudentIds.stream()
                 .map(studentId -> studentRepository.findById(studentId)
-                        .orElseThrow(() -> new IllegalArgumentException("Student not found with id: " + studentId)))
+                        .orElseThrow(() -> new NotFoundException(
+                                ErrorCode.STUDENT_NOT_FOUND,
+                                "Student not found with id: " + studentId
+                        )))
                 .collect(Collectors.toSet());
 
         for (Student student : students) {
             if (!student.getGroup().getId().equals(lesson.getGroup().getId())) {
-                throw new IllegalArgumentException("Student " + student.getId() + " is not from lesson's group");
+                throw new ValidationException(
+                        ErrorCode.STUDENT_NOT_IN_GROUP,
+                        "Student " + student.getId() + " is not from lesson's group"
+                );
             }
         }
 
@@ -101,11 +143,17 @@ public class AttendanceService {
 
     public void deleteAttendance(Long lessonId) {
         if (lessonId == null || lessonId <= 0) {
-            throw new IllegalArgumentException("Lesson ID cannot be null or negative");
+            throw new ValidationException(
+                    ErrorCode.VALIDATION_ERROR,
+                    "Lesson ID must be positive number"
+            );
         }
 
         if (!attendanceRepository.existsByLessonId(lessonId)) {
-            throw new IllegalArgumentException("Attendance not found for lesson id: " + lessonId);
+            throw new NotFoundException(
+                    ErrorCode.ATTENDANCE_NOT_FOUND,
+                    "Attendance not found for lesson id: " + lessonId
+            );
         }
 
         attendanceRepository.deleteByLessonId(lessonId);

@@ -19,6 +19,7 @@ public class TeacherMapper {
 
     public TeacherResponse toResponse (Teacher teacher){
         TeacherResponse response = new TeacherResponse();
+        response.setId(teacher.getId());
         response.setFullName(teacher.getFirstName() + " " + teacher.getLastName());
         return response;
     }

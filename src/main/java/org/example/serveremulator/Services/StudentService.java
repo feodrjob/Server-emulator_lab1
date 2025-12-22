@@ -2,6 +2,9 @@ package org.example.serveremulator.Services;
 
 import jakarta.transaction.Transactional;
 import org.example.serveremulator.Entityes.Student;
+import org.example.serveremulator.Enums.ErrorCode;
+import org.example.serveremulator.Exceptions.NotFoundException;
+import org.example.serveremulator.Exceptions.ValidationException;
 import org.example.serveremulator.Repositories.GroupRepository;
 import org.example.serveremulator.Repositories.StudentRepository;
 import org.springframework.stereotype.Service;
@@ -24,37 +27,79 @@ public class StudentService {
         return studentRepository.findAll();
     }
 
-    public Optional<Student> getStudentById(Long id) {
+    public Student getStudentById(Long id) {
         if (id == null || id <= 0) {
-            throw new IllegalArgumentException("Student ID must be positive number");
+            throw new ValidationException(
+                    ErrorCode.VALIDATION_ERROR,
+                    "Student ID must be positive number"
+            );
         }
-        return studentRepository.findById(id);
+
+        return studentRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException(
+                        ErrorCode.STUDENT_NOT_FOUND,
+                        "Student with id " + id + " not found"
+                ));
     }
 
     public List<Student> getStudentsByGroupId(Long groupId) {
         if (groupId == null || groupId <= 0) {
-            throw new IllegalArgumentException("Group ID must be positive number");
+            throw new ValidationException(
+                    ErrorCode.VALIDATION_ERROR,
+                    "Group ID must be positive number"
+            );
         }
+
+        if (!groupRepository.existsById(groupId)) {
+            throw new NotFoundException(
+                    ErrorCode.GROUP_NOT_FOUND,
+                    "Group with id " + groupId + " not found"
+            );
+        }
+
         return studentRepository.findByGroupId(groupId);
     }
 
     public Student createStudent(Student student) {
         if (student == null) {
-            throw new IllegalArgumentException("Student cannot be null");
+            throw new ValidationException(
+                    ErrorCode.VALIDATION_ERROR,
+                    "Student cannot be null"
+            );
         }
 
         if (student.getFirstName() == null || student.getFirstName().trim().isEmpty()) {
-            throw new IllegalArgumentException("First name is required");
+            throw new ValidationException(
+                    ErrorCode.STUDENT_INVALID_NAME,
+                    "First name is required"
+            );
         }
         if (student.getLastName() == null || student.getLastName().trim().isEmpty()) {
-            throw new IllegalArgumentException("Last name is required");
-        }
-        if (student.getGroup() == null) {
-            throw new IllegalArgumentException("Group is required");
+            throw new ValidationException(
+                    ErrorCode.STUDENT_INVALID_NAME,
+                    "Last name is required"
+            );
         }
 
-        if (!groupRepository.existsById(student.getGroup().getId())) {
-            throw new IllegalArgumentException("Group not found with id: " + student.getGroup().getId());
+        if (student.getGroup() == null || student.getGroup().getId() == null) {
+            throw new ValidationException(
+                    ErrorCode.VALIDATION_ERROR,
+                    "Group is required"
+            );
+        }
+
+        Long groupId = student.getGroup().getId();
+        if (!groupRepository.existsById(groupId)) {
+            throw new NotFoundException(
+                    ErrorCode.GROUP_NOT_FOUND,
+                    "Group with id " + groupId + " not found"
+            );
+        }
+
+        student.setFirstName(student.getFirstName().trim());
+        student.setLastName(student.getLastName().trim());
+        if (student.getMiddleName() != null) {
+            student.setMiddleName(student.getMiddleName().trim());
         }
 
         return studentRepository.save(student);
@@ -62,29 +107,47 @@ public class StudentService {
 
     public Student updateStudent(Long id, Student studentDetails) {
         if (id == null || id <= 0) {
-            throw new IllegalArgumentException("Student ID must be positive number");
+            throw new ValidationException(
+                    ErrorCode.VALIDATION_ERROR,
+                    "Student ID must be positive number"
+            );
         }
 
         Student existingStudent = studentRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Student not found with id: " + id));
+                .orElseThrow(() -> new NotFoundException(
+                        ErrorCode.STUDENT_NOT_FOUND,
+                        "Student with id " + id + " not found"
+                ));
 
         if (studentDetails.getFirstName() != null && !studentDetails.getFirstName().trim().isEmpty()) {
-            existingStudent.setFirstName(studentDetails.getFirstName());
+            existingStudent.setFirstName(studentDetails.getFirstName().trim());
         }
+
         if (studentDetails.getMiddleName() != null) {
-            existingStudent.setMiddleName(studentDetails.getMiddleName());
+            existingStudent.setMiddleName(studentDetails.getMiddleName().trim());
         }
+
         if (studentDetails.getLastName() != null && !studentDetails.getLastName().trim().isEmpty()) {
-            existingStudent.setLastName(studentDetails.getLastName());
+            existingStudent.setLastName(studentDetails.getLastName().trim());
         }
+
         if (studentDetails.getStatus() != null) {
             existingStudent.setStatus(studentDetails.getStatus());
         }
-        if (studentDetails.getGroup() != null) {
-            if (!groupRepository.existsById(studentDetails.getGroup().getId())) {
-                throw new IllegalArgumentException("Group not found with id: " + studentDetails.getGroup().getId());
+
+        if (studentDetails.getGroup() != null && studentDetails.getGroup().getId() != null) {
+            Long newGroupId = studentDetails.getGroup().getId();
+
+            if (!groupRepository.existsById(newGroupId)) {
+                throw new NotFoundException(
+                        ErrorCode.GROUP_NOT_FOUND,
+                        "Group with id " + newGroupId + " not found"
+                );
             }
-            existingStudent.setGroup(studentDetails.getGroup());
+
+            if (!newGroupId.equals(existingStudent.getGroup().getId())) {
+                existingStudent.setGroup(studentDetails.getGroup());
+            }
         }
 
         return studentRepository.save(existingStudent);
@@ -92,13 +155,27 @@ public class StudentService {
 
     public void deleteStudent(Long id) {
         if (id == null || id <= 0) {
-            throw new IllegalArgumentException("Student ID must be positive number");
+            throw new ValidationException(
+                    ErrorCode.VALIDATION_ERROR,
+                    "Student ID must be positive number"
+            );
         }
 
         if (!studentRepository.existsById(id)) {
-            throw new IllegalArgumentException("Student not found with id: " + id);
+            throw new NotFoundException(
+                    ErrorCode.STUDENT_NOT_FOUND,
+                    "Student with id " + id + " not found"
+            );
         }
 
         studentRepository.deleteById(id);
+    }
+
+    // ✅ Вспомогательный метод
+    public boolean existsById(Long id) {
+        if (id == null || id <= 0) {
+            return false;
+        }
+        return studentRepository.existsById(id);
     }
 }

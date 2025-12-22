@@ -1,7 +1,6 @@
 package org.example.serveremulator.DTO;
 
 import org.example.serveremulator.Entityes.Group;
-import org.example.serveremulator.Entityes.Student;
 import org.example.serveremulator.Enums.StudentEnum;
 
 public class StudentRequest {

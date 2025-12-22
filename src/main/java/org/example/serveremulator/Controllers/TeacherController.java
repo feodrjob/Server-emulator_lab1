@@ -30,47 +30,30 @@ public class TeacherController {
                 .collect(Collectors.toList());
     }
 
-    @GetMapping ("/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<TeacherResponse> getTeacher(@PathVariable Long id) {
-        try {
-            Teacher teacher = teacherService.findById(id).
-                    orElseThrow(() -> new IllegalArgumentException("id is null or id <= 0"));
-            return ResponseEntity.ok(teacherMapper.toResponse(teacher));
-        } catch (IllegalArgumentException e){
-            return ResponseEntity.notFound().build();
-        }
+        Teacher teacher = teacherService.findById(id);
+        return ResponseEntity.ok(teacherMapper.toResponse(teacher));
     }
 
     @PostMapping
     public ResponseEntity<TeacherResponse> createTeacher(@RequestBody TeacherRequest request) {
-        try{
-            Teacher teacher = teacherMapper.toEntity(request);
-            Teacher createdTeacher = teacherService.createTeacher(teacher);
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(teacherMapper.toResponse(createdTeacher));
-        }catch (IllegalArgumentException e){
-            return ResponseEntity.badRequest().build();
-        }
+        Teacher teacher = teacherMapper.toEntity(request);
+        Teacher createdTeacher = teacherService.createTeacher(teacher);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(teacherMapper.toResponse(createdTeacher));
     }
 
-    @PutMapping ("/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<TeacherResponse> updateTeacher(@PathVariable Long id, @RequestBody TeacherRequest request) {
-        try{
-            Teacher teacher = teacherMapper.toEntity(request);
-            Teacher updatedTeacher = teacherService.updateTeacher(id, teacher);
-            return ResponseEntity.ok(teacherMapper.toResponse(updatedTeacher));
-        }catch (IllegalArgumentException e){
-            return ResponseEntity.badRequest().build();
-        }
+        Teacher teacher = teacherMapper.toEntity(request);
+        Teacher updatedTeacher = teacherService.updateTeacher(id, teacher);
+        return ResponseEntity.ok(teacherMapper.toResponse(updatedTeacher));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity <Void>  deleteTeacher(@PathVariable Long id) {
-        try{
-            teacherService.deleteTeacher(id);
-            return ResponseEntity.noContent().build();
-        }catch (IllegalArgumentException e){
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<Void> deleteTeacher(@PathVariable Long id) {
+        teacherService.deleteTeacher(id);
+        return ResponseEntity.noContent().build();
     }
 }

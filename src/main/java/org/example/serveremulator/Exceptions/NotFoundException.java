@@ -1,14 +1,15 @@
 package org.example.serveremulator.Exceptions;
+
+import org.example.serveremulator.Enums.ErrorCode;
 import org.springframework.http.HttpStatus;
 
-//404 not found
 public class NotFoundException extends ApiException {
-    public NotFoundException(String entityName, Long id) {
-        super(entityName + "with id" + id + "not found", HttpStatus.NOT_FOUND);
+    public NotFoundException(ErrorCode errorCode, String details) {
+        super(errorCode, HttpStatus.NOT_FOUND, details);
     }
 
-    // Альтернативный конструктор для сообщений без ID
+    // Конструктор для обратной совместимости
     public NotFoundException(String message) {
-        super(message, HttpStatus.NOT_FOUND);
+        super(ErrorCode.GROUP_NOT_FOUND, HttpStatus.NOT_FOUND, message);
     }
 }

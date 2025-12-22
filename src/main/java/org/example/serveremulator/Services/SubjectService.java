@@ -3,12 +3,13 @@ package org.example.serveremulator.Services;
 import jakarta.transaction.Transactional;
 import org.example.serveremulator.Entityes.Subject;
 import org.example.serveremulator.Repositories.SubjectRepository;
-import org.example.serveremulator.Repositories.TeacherRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
-
+import org.example.serveremulator.Enums.ErrorCode;
+import org.example.serveremulator.Exceptions.NotFoundException;
+import org.example.serveremulator.Exceptions.ValidationException;
 @Service
 @Transactional
 public class SubjectService {
@@ -18,67 +19,98 @@ public class SubjectService {
         this.subjectRepository = subjectRepository;
     }
 
-    public List <Subject> getAllSubjects()
-    {
+    public List<Subject> getAllSubjects() {
         return subjectRepository.findAll();
     }
-    public Optional<Subject> getSubjectById(Long id) {
+
+    public Subject getSubjectById(Long id) {
         if (id == null || id <= 0) {
-            throw new IllegalArgumentException("id is null");
+            throw new ValidationException(
+                    ErrorCode.VALIDATION_ERROR,
+                    "Subject ID must be positive number"
+            );
         }
-        return subjectRepository.findById(id);
+
+        return subjectRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException(
+                        ErrorCode.SUBJECT_NOT_FOUND,
+                        "Subject with id " + id + " not found"
+                ));
     }
 
     public Subject createSubject(Subject subject) {
-        if (subject == null || subject.getName() == null) {
-            throw new IllegalArgumentException("name is null");
+        if (subject == null) {
+            throw new ValidationException(
+                    ErrorCode.VALIDATION_ERROR,
+                    "Subject cannot be null"
+            );
         }
-         if (subjectRepository.existsByName(subject.getName())) {
-             throw new IllegalArgumentException("name already exists");
-         }
-         return subjectRepository.save(subject);
+
+        if (subject.getName() == null || subject.getName().trim().isEmpty()) {
+            throw new ValidationException(
+                    ErrorCode.VALIDATION_ERROR,
+                    "Subject name is required"
+            );
+        }
+
+        String subjectName = subject.getName().trim();
+
+        if (subjectRepository.existsByName(subjectName)) {
+            throw new ValidationException(
+                    ErrorCode.VALIDATION_ERROR,
+                    "Subject with name '" + subjectName + "' already exists"
+            );
+        }
+
+        subject.setName(subjectName);
+        return subjectRepository.save(subject);
     }
 
     public Subject updateSubject(Long id, Subject subject) {
         if (id == null || id <= 0) {
-            throw new IllegalArgumentException("id is null");
+            throw new ValidationException(
+                    ErrorCode.VALIDATION_ERROR,
+                    "Subject ID must be positive number"
+            );
         }
-        Subject updatedSubject = subjectRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("subject not found"));
-        if (subject.getName() != null && !subject.getName().trim().isEmpty()
-                && !subject.getName().equals(updatedSubject.getName())) {
 
-            if (subjectRepository.existsByName(subject.getName())) {
-                throw new IllegalArgumentException("Subject with name '" + subject.getName() + "' already exists");
+        Subject existingSubject = subjectRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException(
+                        ErrorCode.SUBJECT_NOT_FOUND,
+                        "Subject with id " + id + " not found"
+                ));
+
+        if (subject.getName() != null && !subject.getName().trim().isEmpty()
+                && !subject.getName().equals(existingSubject.getName())) {
+
+            String newName = subject.getName().trim();
+
+            if (subjectRepository.existsByName(newName)) {
+                throw new ValidationException(
+                        ErrorCode.VALIDATION_ERROR,
+                        "Subject with name '" + newName + "' already exists"
+                );
             }
-            updatedSubject.setName(subject.getName());
+            existingSubject.setName(newName);
         }
-        return subjectRepository.save(updatedSubject);
+        return subjectRepository.save(existingSubject);
     }
+
     public void deleteSubject(Long id) {
         if (id == null || id <= 0) {
-            throw new IllegalArgumentException("id is null");
+            throw new ValidationException(
+                    ErrorCode.VALIDATION_ERROR,
+                    "Subject ID must be positive number"
+            );
         }
-        if  (!subjectRepository.existsById(id)) {
-            throw new IllegalArgumentException("subject not found");
+
+        if (!subjectRepository.existsById(id)) {
+            throw new NotFoundException(
+                    ErrorCode.SUBJECT_NOT_FOUND,
+                    "Subject with id " + id + " not found"
+            );
         }
+
         subjectRepository.deleteById(id);
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

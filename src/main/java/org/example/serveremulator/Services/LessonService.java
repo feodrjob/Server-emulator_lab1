@@ -11,6 +11,10 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import org.example.serveremulator.Enums.ErrorCode;
+import org.example.serveremulator.Exceptions.NotFoundException;
+import org.example.serveremulator.Exceptions.ValidationException;
+
 
 @Service
 @Transactional
@@ -34,26 +38,46 @@ public class LessonService {
         return lessonRepository.findAll();
     }
 
-    public Optional<Lesson> getLessonById(Long id) {
+    public Lesson getLessonById(Long id) {
         if (id == null || id <= 0) {
-            throw new IllegalArgumentException("Lesson ID cannot be null or negative");
+            throw new ValidationException(
+                    ErrorCode.VALIDATION_ERROR,
+                    "Lesson ID must be positive number"
+            );
         }
-        return lessonRepository.findById(id);
+
+        return lessonRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException(
+                        ErrorCode.LESSON_NOT_FOUND,
+                        "Lesson with id " + id + " not found"
+                ));
     }
 
     public List<Lesson> getLessonsByTeacherId(Long teacherId, LocalDate startDate, LocalDate endDate) {
         if (teacherId == null || teacherId <= 0) {
-            throw new IllegalArgumentException("Teacher ID cannot be null or negative");
+            throw new ValidationException(
+                    ErrorCode.VALIDATION_ERROR,
+                    "Teacher ID must be positive number"
+            );
         }
         if (startDate == null || endDate == null) {
-            throw new IllegalArgumentException("Dates cannot be null");
+            throw new ValidationException(
+                    ErrorCode.VALIDATION_ERROR,
+                    "Dates cannot be null"
+            );
         }
         if (startDate.isAfter(endDate)) {
-            throw new IllegalArgumentException("Start date cannot be after end date");
+            throw new ValidationException(
+                    ErrorCode.VALIDATION_ERROR,
+                    "Start date cannot be after end date"
+            );
         }
 
         if (!teacherRepository.existsById(teacherId)) {
-            throw new IllegalArgumentException("Teacher not found with id: " + teacherId);
+            throw new NotFoundException(
+                    ErrorCode.TEACHER_NOT_FOUND,
+                    "Teacher not found with id: " + teacherId
+            );
         }
 
         return lessonRepository.findByTeacherIdAndDateBetween(teacherId, startDate, endDate);
@@ -61,17 +85,29 @@ public class LessonService {
 
     public List<Lesson> getLessonsByGroupId(Long groupId, LocalDate startDate, LocalDate endDate) {
         if (groupId == null || groupId <= 0) {
-            throw new IllegalArgumentException("Group ID cannot be null or negative");
+            throw new ValidationException(
+                    ErrorCode.VALIDATION_ERROR,
+                    "Group ID must be positive number"
+            );
         }
         if (startDate == null || endDate == null) {
-            throw new IllegalArgumentException("Dates cannot be null");
+            throw new ValidationException(
+                    ErrorCode.VALIDATION_ERROR,
+                    "Dates cannot be null"
+            );
         }
         if (startDate.isAfter(endDate)) {
-            throw new IllegalArgumentException("Start date cannot be after end date");
+            throw new ValidationException(
+                    ErrorCode.VALIDATION_ERROR,
+                    "Start date cannot be after end date"
+            );
         }
 
         if (!groupRepository.existsById(groupId)) {
-            throw new IllegalArgumentException("Group not found with id: " + groupId);
+            throw new NotFoundException(
+                    ErrorCode.GROUP_NOT_FOUND,
+                    "Group not found with id: " + groupId
+            );
         }
 
         return lessonRepository.findByGroupIdAndDateBetween(groupId, startDate, endDate);
@@ -79,57 +115,99 @@ public class LessonService {
 
     public Lesson createLesson(Lesson lesson) {
         if (lesson == null) {
-            throw new IllegalArgumentException("Lesson cannot be null");
+            throw new ValidationException(
+                    ErrorCode.VALIDATION_ERROR,
+                    "Lesson cannot be null"
+            );
         }
 
         if (lesson.getDate() == null) {
-            throw new IllegalArgumentException("Lesson date is required");
+            throw new ValidationException(
+                    ErrorCode.VALIDATION_ERROR,
+                    "Lesson date is required"
+            );
         }
         if (lesson.getLessonNumber() == null) {
-            throw new IllegalArgumentException("Lesson number is required");
+            throw new ValidationException(
+                    ErrorCode.VALIDATION_ERROR,
+                    "Lesson number is required"
+            );
         }
         if (lesson.getTeacher() == null || lesson.getTeacher().getId() == null) {
-            throw new IllegalArgumentException("Teacher is required");
+            throw new ValidationException(
+                    ErrorCode.VALIDATION_ERROR,
+                    "Teacher is required"
+            );
         }
         if (lesson.getSubject() == null || lesson.getSubject().getId() == null) {
-            throw new IllegalArgumentException("Subject is required");
+            throw new ValidationException(
+                    ErrorCode.VALIDATION_ERROR,
+                    "Subject is required"
+            );
         }
         if (lesson.getGroup() == null || lesson.getGroup().getId() == null) {
-            throw new IllegalArgumentException("Group is required");
+            throw new ValidationException(
+                    ErrorCode.VALIDATION_ERROR,
+                    "Group is required"
+            );
         }
 
-        if (!teacherRepository.existsById(lesson.getTeacher().getId())) {
-            throw new IllegalArgumentException("Teacher not found with id: " + lesson.getTeacher().getId());
+        Long teacherId = lesson.getTeacher().getId();
+        Long subjectId = lesson.getSubject().getId();
+        Long groupId = lesson.getGroup().getId();
+
+        if (!teacherRepository.existsById(teacherId)) {
+            throw new NotFoundException(
+                    ErrorCode.TEACHER_NOT_FOUND,
+                    "Teacher not found with id: " + teacherId
+            );
         }
-        if (!subjectRepository.existsById(lesson.getSubject().getId())) {
-            throw new IllegalArgumentException("Subject not found with id: " + lesson.getSubject().getId());
+        if (!subjectRepository.existsById(subjectId)) {
+            throw new NotFoundException(
+                    ErrorCode.SUBJECT_NOT_FOUND,
+                    "Subject not found with id: " + subjectId
+            );
         }
-        if (!groupRepository.existsById(lesson.getGroup().getId())) {
-            throw new IllegalArgumentException("Group not found with id: " + lesson.getGroup().getId());
+        if (!groupRepository.existsById(groupId)) {
+            throw new NotFoundException(
+                    ErrorCode.GROUP_NOT_FOUND,
+                    "Group not found with id: " + groupId
+            );
         }
 
         if (lesson.getLessonNumber() < 1 || lesson.getLessonNumber() > 8) {
-            throw new IllegalArgumentException("Lesson number must be between 1 and 8");
+            throw new ValidationException(
+                    ErrorCode.VALIDATION_ERROR,
+                    "Lesson number must be between 1 and 8"
+            );
         }
 
         if (lessonRepository.existsByGroupIdAndDateAndLessonNumber(
-                lesson.getGroup().getId(),
+                groupId,
                 lesson.getDate(),
                 lesson.getLessonNumber())) {
-            throw new IllegalArgumentException("Group already has lesson at this time");
+            throw new ValidationException(
+                    ErrorCode.LESSON_SCHEDULE_CONFLICT,
+                    "Group already has lesson at this time"
+            );
         }
 
         return lessonRepository.save(lesson);
     }
 
-    // 6. Обновить занятие
     public Lesson updateLesson(Long id, Lesson lesson) {
         if (id == null || id <= 0) {
-            throw new IllegalArgumentException("Lesson ID cannot be null or negative");
+            throw new ValidationException(
+                    ErrorCode.VALIDATION_ERROR,
+                    "Lesson ID must be positive number"
+            );
         }
 
         Lesson existingLesson = lessonRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Lesson with id " + id + " not found"));
+                .orElseThrow(() -> new NotFoundException(
+                        ErrorCode.LESSON_NOT_FOUND,
+                        "Lesson with id " + id + " not found"
+                ));
 
         if (lesson.getDate() != null) {
             existingLesson.setDate(lesson.getDate());
@@ -137,28 +215,43 @@ public class LessonService {
 
         if (lesson.getLessonNumber() != null) {
             if (lesson.getLessonNumber() < 1 || lesson.getLessonNumber() > 8) {
-                throw new IllegalArgumentException("Lesson number must be between 1 and 8");
+                throw new ValidationException(
+                        ErrorCode.VALIDATION_ERROR,
+                        "Lesson number must be between 1 and 8"
+                );
             }
             existingLesson.setLessonNumber(lesson.getLessonNumber());
         }
 
         if (lesson.getTeacher() != null && lesson.getTeacher().getId() != null) {
-            if (!teacherRepository.existsById(lesson.getTeacher().getId())) {
-                throw new IllegalArgumentException("Teacher not found with id: " + lesson.getTeacher().getId());
+            Long teacherId = lesson.getTeacher().getId();
+            if (!teacherRepository.existsById(teacherId)) {
+                throw new NotFoundException(
+                        ErrorCode.TEACHER_NOT_FOUND,
+                        "Teacher not found with id: " + teacherId
+                );
             }
             existingLesson.setTeacher(lesson.getTeacher());
         }
 
         if (lesson.getSubject() != null && lesson.getSubject().getId() != null) {
-            if (!subjectRepository.existsById(lesson.getSubject().getId())) {
-                throw new IllegalArgumentException("Subject not found with id: " + lesson.getSubject().getId());
+            Long subjectId = lesson.getSubject().getId();
+            if (!subjectRepository.existsById(subjectId)) {
+                throw new NotFoundException(
+                        ErrorCode.SUBJECT_NOT_FOUND,
+                        "Subject not found with id: " + subjectId
+                );
             }
             existingLesson.setSubject(lesson.getSubject());
         }
 
         if (lesson.getGroup() != null && lesson.getGroup().getId() != null) {
-            if (!groupRepository.existsById(lesson.getGroup().getId())) {
-                throw new IllegalArgumentException("Group not found with id: " + lesson.getGroup().getId());
+            Long groupId = lesson.getGroup().getId();
+            if (!groupRepository.existsById(groupId)) {
+                throw new NotFoundException(
+                        ErrorCode.GROUP_NOT_FOUND,
+                        "Group not found with id: " + groupId
+                );
             }
             existingLesson.setGroup(lesson.getGroup());
         }
@@ -167,18 +260,28 @@ public class LessonService {
                 existingLesson.getGroup().getId(),
                 existingLesson.getDate(),
                 existingLesson.getLessonNumber())) {
-            throw new IllegalArgumentException("Group already has lesson at this time");
+            throw new ValidationException(
+                    ErrorCode.LESSON_SCHEDULE_CONFLICT,
+                    "Group already has lesson at this time"
+            );
         }
 
         return lessonRepository.save(existingLesson);
     }
+
     public void deleteLesson(Long id) {
         if (id == null || id <= 0) {
-            throw new IllegalArgumentException("Lesson ID cannot be null or negative");
+            throw new ValidationException(
+                    ErrorCode.VALIDATION_ERROR,
+                    "Lesson ID must be positive number"
+            );
         }
 
         if (!lessonRepository.existsById(id)) {
-            throw new IllegalArgumentException("Lesson not found with id: " + id);
+            throw new NotFoundException(
+                    ErrorCode.LESSON_NOT_FOUND,
+                    "Lesson not found with id: " + id
+            );
         }
 
         lessonRepository.deleteById(id);

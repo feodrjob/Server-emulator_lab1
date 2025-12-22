@@ -31,74 +31,30 @@ public class GroupController {
                 .collect(Collectors.toList());
     }
 
-    @GetMapping ("/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<GroupResponse> getGroup(@PathVariable Long id) {
-        try {
-            Group group = groupService.getGroupById(id).
-                    orElseThrow(() -> new IllegalArgumentException("Group with id " + id + " not found"));
-            return ResponseEntity.ok(groupMapper.toResponse(group));
-
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-
-        }
+        Group group = groupService.getGroupById(id);
+        return ResponseEntity.ok(groupMapper.toResponse(group));
     }
 
     @PostMapping
     public ResponseEntity<GroupResponse> createGroup(@RequestBody GroupRequest request) {
-        try
-        {
-            Group group = groupMapper.toEntity(request);
-            Group cratedGroup = groupService.createGroup(group);
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(groupMapper.toResponse(cratedGroup));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
-        }
+        Group group = groupMapper.toEntity(request);
+        Group createdGroup = groupService.createGroup(group);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(groupMapper.toResponse(createdGroup));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<GroupResponse> updateGroup(@PathVariable Long id, @RequestBody GroupRequest request) {
-        try {
-            Group group = groupMapper.toEntity(request);
-            Group updatedGroup = groupService.updateGroup(id, group);
-            return ResponseEntity.ok(groupMapper.toResponse(updatedGroup));
-        }
-        catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
-        }
+        Group group = groupMapper.toEntity(request);
+        Group updatedGroup = groupService.updateGroup(id, group);
+        return ResponseEntity.ok(groupMapper.toResponse(updatedGroup));
     }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteGroup(@PathVariable Long id) {
-        try{
-            groupService.deleteGroup(id);
-            return ResponseEntity.noContent().build();
-        }
-        catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        }
+        groupService.deleteGroup(id);
+        return ResponseEntity.noContent().build();
     }
-
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

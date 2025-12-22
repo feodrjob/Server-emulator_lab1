@@ -14,10 +14,10 @@ public class GroupMapper {
         return group;
     }
 
-    public GroupResponse toResponse (Group group){
+    public GroupResponse toResponse(Group group){
         GroupResponse response = new GroupResponse();
+        response.setId(group.getId());
         response.setName(group.getName());
         return response;
     }
-
 }
