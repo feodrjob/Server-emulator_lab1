@@ -38,7 +38,7 @@ public class Lesson {
         this.lessonNumber = lessonNumber;
         this.teacher = teacher;
         this.subject = subject;
-        this.group = group; // ✅ теперь правильно
+        this.group = group;
     }
 
     public Long getId() {

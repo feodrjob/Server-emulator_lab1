@@ -171,7 +171,6 @@ public class StudentService {
         studentRepository.deleteById(id);
     }
 
-    // ✅ Вспомогательный метод
     public boolean existsById(Long id) {
         if (id == null || id <= 0) {
             return false;

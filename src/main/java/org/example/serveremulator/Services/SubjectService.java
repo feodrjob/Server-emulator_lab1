@@ -1,22 +1,32 @@
 package org.example.serveremulator.Services;
 
 import jakarta.transaction.Transactional;
+import org.example.serveremulator.Entityes.Lesson;
 import org.example.serveremulator.Entityes.Subject;
+import org.example.serveremulator.Enums.ErrorCode;
+import org.example.serveremulator.Exceptions.NotFoundException;
+import org.example.serveremulator.Exceptions.ValidationException;
+import org.example.serveremulator.Repositories.AttendanceRepository;
+import org.example.serveremulator.Repositories.LessonRepository;
 import org.example.serveremulator.Repositories.SubjectRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
-import org.example.serveremulator.Enums.ErrorCode;
-import org.example.serveremulator.Exceptions.NotFoundException;
-import org.example.serveremulator.Exceptions.ValidationException;
+import java.util.stream.Collectors;
+
 @Service
 @Transactional
 public class SubjectService {
     private final SubjectRepository subjectRepository;
+    private final LessonRepository lessonRepository;
+    private final AttendanceRepository attendanceRepository;
 
-    public SubjectService(SubjectRepository subjectRepository) {
+    public SubjectService(SubjectRepository subjectRepository,
+                          LessonRepository lessonRepository,
+                          AttendanceRepository attendanceRepository) {
         this.subjectRepository = subjectRepository;
+        this.lessonRepository = lessonRepository;
+        this.attendanceRepository = attendanceRepository;
     }
 
     public List<Subject> getAllSubjects() {
@@ -104,13 +114,23 @@ public class SubjectService {
             );
         }
 
-        if (!subjectRepository.existsById(id)) {
-            throw new NotFoundException(
-                    ErrorCode.SUBJECT_NOT_FOUND,
-                    "Subject with id " + id + " not found"
-            );
+        Subject subject = subjectRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException(
+                        ErrorCode.SUBJECT_NOT_FOUND,
+                        "Subject with id " + id + " not found"
+                ));
+
+        List<Lesson> lessons = lessonRepository.findAll().stream()
+                .filter(lesson -> lesson.getSubject() != null &&
+                        lesson.getSubject().getId().equals(id))
+                .collect(Collectors.toList());
+
+        for (Lesson lesson : lessons) {
+            attendanceRepository.deleteByLessonId(lesson.getId());
         }
 
-        subjectRepository.deleteById(id);
+        lessonRepository.deleteBySubjectId(id);
+
+        subjectRepository.delete(subject);
     }
 }

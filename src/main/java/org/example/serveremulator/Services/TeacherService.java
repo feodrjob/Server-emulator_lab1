@@ -1,6 +1,7 @@
 package org.example.serveremulator.Services;
 import jakarta.transaction.Transactional;
 import org.example.serveremulator.Entityes.Teacher;
+import org.example.serveremulator.Repositories.LessonRepository;
 import org.example.serveremulator.Repositories.StudentRepository;
 import org.example.serveremulator.Repositories.TeacherRepository;
 import org.springframework.stereotype.Service;
@@ -15,9 +16,11 @@ import org.example.serveremulator.Exceptions.ValidationException;
 @Transactional
 public class TeacherService {
     private final TeacherRepository teacherRepository;
+    private final LessonRepository lessonRepository;
 
-    public TeacherService(TeacherRepository teacherRepository) {
+    public TeacherService(TeacherRepository teacherRepository, LessonRepository lessonRepository) {
         this.teacherRepository = teacherRepository;
+        this.lessonRepository = lessonRepository;
     }
 
     public List<Teacher> findAll() {
@@ -120,13 +123,13 @@ public class TeacherService {
             );
         }
 
-        if (!teacherRepository.existsById(id)) {
-            throw new NotFoundException(
-                    ErrorCode.TEACHER_NOT_FOUND,
-                    "Teacher with id " + id + " not found"
-            );
-        }
+        Teacher teacher = teacherRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException(
+                        ErrorCode.TEACHER_NOT_FOUND,
+                        "Teacher with id " + id + " not found"
+                ));
 
-        teacherRepository.deleteById(id);
+        lessonRepository.deleteByTeacherId(id);
+        teacherRepository.delete(teacher);
     }
 }
