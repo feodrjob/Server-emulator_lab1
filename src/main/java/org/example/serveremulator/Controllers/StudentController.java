@@ -1,5 +1,7 @@
 package org.example.serveremulator.Controllers;
 
+import org.example.serveremulator.DTO.ApiResponse;
+import org.example.serveremulator.DTO.LessonResponse;
 import org.example.serveremulator.DTO.StudentRequest;
 import org.example.serveremulator.DTO.StudentResponse;
 import org.example.serveremulator.Entityes.Student;
@@ -24,54 +26,55 @@ public class StudentController {
     }
 
     @GetMapping
-    public List<StudentResponse> getAllStudents() {
-        return studentService.getAllStudents().stream()
+    public ResponseEntity<ApiResponse<List<StudentResponse>>> getAllStudents() {
+        List<StudentResponse> students = studentService.getAllStudents().stream()
                 .map(studentMapper::toResponse)
                 .collect(Collectors.toList());
+        ApiResponse<List<StudentResponse>> response = new ApiResponse<>(true,students);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<StudentResponse> getStudentById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<StudentResponse>> getStudentById(@PathVariable Long id) {
         Student student = studentService.getStudentById(id);
-        return ResponseEntity.ok(studentMapper.toResponse(student));
+        StudentResponse studentResponse = studentMapper.toResponse(student);
+
+        ApiResponse<StudentResponse> response = new ApiResponse<>(true,studentResponse);
+        return ResponseEntity.ok(response);
     }
     @GetMapping("/group/{groupId}")
-    public List<StudentResponse> getStudentsByGroup(@PathVariable Long groupId) {
-        return studentService.getStudentsByGroupId(groupId).stream()
+    public ResponseEntity<ApiResponse<List<StudentResponse>>> getStudentsByGroup(
+            @PathVariable Long groupId) {
+        List<StudentResponse> student = studentService.getStudentsByGroupId(groupId).stream()
                 .map(studentMapper::toResponse)
                 .collect(Collectors.toList());
+        ApiResponse<List<StudentResponse>> response = new ApiResponse<>(true,student);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping
-    public ResponseEntity<StudentResponse> createStudent(@RequestBody StudentRequest request) {
-        try {
-            Student student = studentMapper.toEntity(request);
-            Student createdStudent = studentService.createStudent(student);
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(studentMapper.toResponse(createdStudent));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
-        }
+    public ResponseEntity<ApiResponse<StudentResponse>> createStudent(@RequestBody StudentRequest request) {
+        Student student = studentMapper.toEntity(request);
+        Student createdStudent = studentService.createStudent(student);
+        StudentResponse students = studentMapper.toResponse(createdStudent);
+        ApiResponse<StudentResponse> response = new ApiResponse<>(true,students);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<StudentResponse> updateStudent(@PathVariable Long id, @RequestBody StudentRequest request) {
-        try {
-            Student student = studentMapper.toEntity(request);
-            Student updatedStudent = studentService.updateStudent(id, student);
-            return ResponseEntity.ok(studentMapper.toResponse(updatedStudent));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
-        }
+    public ResponseEntity<ApiResponse<StudentResponse>> updateStudent(@PathVariable Long id, @RequestBody StudentRequest request) {
+        Student student = studentMapper.toEntity(request);
+        Student updatedStudent = studentService.updateStudent(id, student);
+        StudentResponse students = studentMapper.toResponse(updatedStudent);
+
+        ApiResponse<StudentResponse> response = new ApiResponse<>(true, students);
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteStudent(@PathVariable Long id) {
-        try {
-            studentService.deleteStudent(id);
-            return ResponseEntity.noContent().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<ApiResponse<Void>> deleteStudent(@PathVariable Long id) {
+        studentService.deleteStudent(id);
+        ApiResponse<Void> response = new ApiResponse<>(true,null);
+        return ResponseEntity.ok(response);
     }
 }

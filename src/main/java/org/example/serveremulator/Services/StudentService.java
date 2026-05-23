@@ -5,22 +5,25 @@ import org.example.serveremulator.Entityes.Student;
 import org.example.serveremulator.Enums.ErrorCode;
 import org.example.serveremulator.Exceptions.NotFoundException;
 import org.example.serveremulator.Exceptions.ValidationException;
+import org.example.serveremulator.Repositories.AttendanceRepository;
 import org.example.serveremulator.Repositories.GroupRepository;
 import org.example.serveremulator.Repositories.StudentRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
-
 @Service
 @Transactional
 public class StudentService {
     private final StudentRepository studentRepository;
     private final GroupRepository groupRepository;
+    private final AttendanceRepository attendanceRepository;
 
-    public StudentService(StudentRepository studentRepository, GroupRepository groupRepository) {
+    public StudentService(StudentRepository studentRepository,
+                          GroupRepository groupRepository,
+                          AttendanceRepository attendanceRepository) {
         this.studentRepository = studentRepository;
         this.groupRepository = groupRepository;
+        this.attendanceRepository = attendanceRepository;
     }
 
     public List<Student> getAllStudents() {
@@ -30,7 +33,7 @@ public class StudentService {
     public Student getStudentById(Long id) {
         if (id == null || id <= 0) {
             throw new ValidationException(
-                    ErrorCode.VALIDATION_ERROR,
+                    ErrorCode.VALIDATION_INVALID_ID,
                     "Student ID must be positive number"
             );
         }
@@ -45,7 +48,7 @@ public class StudentService {
     public List<Student> getStudentsByGroupId(Long groupId) {
         if (groupId == null || groupId <= 0) {
             throw new ValidationException(
-                    ErrorCode.VALIDATION_ERROR,
+                    ErrorCode.GROUP_INVALID_ID,
                     "Group ID must be positive number"
             );
         }
@@ -83,7 +86,7 @@ public class StudentService {
 
         if (student.getGroup() == null || student.getGroup().getId() == null) {
             throw new ValidationException(
-                    ErrorCode.VALIDATION_ERROR,
+                    ErrorCode.STUDENT_INVALID_GROUP,
                     "Group is required"
             );
         }
@@ -108,7 +111,7 @@ public class StudentService {
     public Student updateStudent(Long id, Student studentDetails) {
         if (id == null || id <= 0) {
             throw new ValidationException(
-                    ErrorCode.VALIDATION_ERROR,
+                    ErrorCode.VALIDATION_INVALID_ID,
                     "Student ID must be positive number"
             );
         }
@@ -153,21 +156,22 @@ public class StudentService {
         return studentRepository.save(existingStudent);
     }
 
+    @Transactional
     public void deleteStudent(Long id) {
         if (id == null || id <= 0) {
             throw new ValidationException(
-                    ErrorCode.VALIDATION_ERROR,
+                    ErrorCode.VALIDATION_INVALID_ID,
                     "Student ID must be positive number"
             );
         }
 
-        if (!studentRepository.existsById(id)) {
-            throw new NotFoundException(
-                    ErrorCode.STUDENT_NOT_FOUND,
-                    "Student with id " + id + " not found"
-            );
-        }
+        Student student = studentRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException(
+                        ErrorCode.STUDENT_NOT_FOUND,
+                        "Student with id " + id + " not found"
+                ));
 
+        attendanceRepository.deleteStudentFromAllAttendances(student);
         studentRepository.deleteById(id);
     }
 

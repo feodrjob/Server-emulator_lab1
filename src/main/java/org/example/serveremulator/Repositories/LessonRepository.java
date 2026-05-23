@@ -11,7 +11,6 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-
 @Repository
 public interface LessonRepository extends JpaRepository<Lesson, Long> {
 
@@ -27,17 +26,6 @@ public interface LessonRepository extends JpaRepository<Lesson, Long> {
 
     boolean existsByGroupIdAndDateAndLessonNumber(Long groupId, LocalDate date, Integer lessonNumber);
 
-    @Modifying
-    void deleteByTeacherId(Long teacherId);
-
-    @Modifying
-    void deleteByGroupId(Long groupId);
-
-    @Modifying
-    void deleteBySubjectId(Long subjectId);
-
     @EntityGraph(attributePaths = {"teacher", "subject", "group"})
     Optional<Lesson> findWithDetailsById(Long id);
-
-
 }

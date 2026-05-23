@@ -1,66 +1,49 @@
 package org.example.serveremulator.Exceptions;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import org.example.serveremulator.Enums.ErrorCode;
-import org.springframework.http.HttpStatus;
 
-import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ErrorResponse {
-    private final HttpStatus status;
-    private final String message;
-    private final String details;
-    private final Integer errorCode;
+    private boolean success = false;
+    private Integer errorCode;
+    private String errorMessage;
+    private List<String> details;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy hh:mm:ss")
-    private final LocalDateTime timestamp;
+    //Конструктор по всем полям
+    public ErrorResponse(Integer errorCode, String errorMessage, List<String> details) {
+        this.errorCode = errorCode;
+        this.errorMessage = errorMessage;
+        this.details = details != null ? details : new ArrayList<>();
 
-
-    public ErrorResponse(HttpStatus status, String message, String details) {
-        this.status = status;
-        this.message = message;
-        this.details = details;
-        this.errorCode = null;
-        this.timestamp = LocalDateTime.now();
     }
-
-    public ErrorResponse(HttpStatus status, String message) {
-        this(status, message, null);
-    }
-
-
-
+    //Конструктор для Apiexception
     public ErrorResponse(ApiException exception) {
-        this.status = exception.getStatus();
-        this.message = exception.getMessage();
-        this.details = exception.getDetails();
-
+        //Достаем код ошибки из Enum
         if (exception.getErrorCode() != null) {
             this.errorCode = exception.getErrorCode().getCode();
-        } else {
-            this.errorCode = null;  // Для старых исключений
         }
 
-        this.timestamp = LocalDateTime.now();
+        //Строки details складываем в массив (одна строка вроде)
+        this.details = new ArrayList<>();
+        if (exception.getDetails() != null) {
+            this.details.add(exception.getDetails());
+        }
+
     }
 
-    public ErrorResponse(ErrorCode errorCode, HttpStatus status, String details) {
-        this.status = status;
-        this.message = errorCode.getMessage();
-        this.details = details;
-        this.errorCode = errorCode.getCode();
-        this.timestamp = LocalDateTime.now();
+    //Конуструктор для непрведвиденных ошибок
+    public ErrorResponse (Integer errorCode, String errorMessage, String detail){
+        this.errorCode = errorCode;
+        this.errorMessage = errorMessage;
+        this.details = new ArrayList<>();
+        if (detail != null) {
+            this.details.add(detail);
+        }
     }
 
-
-    public ErrorResponse(ErrorCode errorCode, HttpStatus status) {
-        this(errorCode, status, null);
-    }
-
-
-    public HttpStatus getStatus() { return status; }
-    public String getMessage() { return message; }
-    public String getDetails() { return details; }
-    public Integer getErrorCode() { return errorCode; }  // Может быть null!
-    public LocalDateTime getTimestamp() { return timestamp; }
+    public boolean isSuccess() {return success;}
+    public Integer getErrorCode() {return errorCode;}
+    public String getErrorMessage() {return errorMessage;}
+    public List<String> getDetails() {return details;}
 }

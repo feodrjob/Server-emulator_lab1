@@ -1,5 +1,6 @@
 package org.example.serveremulator.Controllers;
 
+import org.example.serveremulator.DTO.ApiResponse;
 import org.example.serveremulator.DTO.LessonRequest;
 import org.example.serveremulator.DTO.LessonResponse;
 import org.example.serveremulator.Entityes.Lesson;
@@ -32,42 +33,54 @@ public class LessonController {
     }
 
     @GetMapping
-    public List<LessonResponse> getAllLessons() {
-        return lessonService.getAllLessons().stream()
+    public ResponseEntity<ApiResponse<List<LessonResponse>>> getAllLessons() {
+        List<LessonResponse> lessons = lessonService.getAllLessons().stream()
                 .map(lessonMapper::toResponse)
                 .collect(Collectors.toList());
+
+        ApiResponse<List<LessonResponse>> response = new ApiResponse<>(true,lessons);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<LessonResponse> getLessonById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<LessonResponse>> getLessonById(@PathVariable Long id) {
         Lesson lesson = lessonService.getLessonById(id);
-        return ResponseEntity.ok(lessonMapper.toResponse(lesson));
+        LessonResponse lessonResponse = lessonMapper.toResponse(lesson);
+
+        ApiResponse<LessonResponse> response = new ApiResponse<>(true, lessonResponse);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/teacher/{teacherId}")
-    public List<LessonResponse> getLessonsByTeacher(
+    public ResponseEntity<ApiResponse<List<LessonResponse>>> getLessonsByTeacher(
             @PathVariable Long teacherId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
 
-        return lessonService.getLessonsByTeacherId(teacherId, start, end).stream()
+        List<LessonResponse> lesson = lessonService.getLessonsByTeacherId(teacherId,start,end).stream()
                 .map(lessonMapper::toResponse)
                 .collect(Collectors.toList());
+
+        ApiResponse<List<LessonResponse>> response = new ApiResponse<> (true,lesson);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/group/{groupId}")
-    public List<LessonResponse> getLessonsByGroup(
+    public ResponseEntity<ApiResponse<List<LessonResponse>>> getLessonsByGroup(
             @PathVariable Long groupId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
 
-        return lessonService.getLessonsByGroupId(groupId, start, end).stream()
+        List<LessonResponse> lesson = lessonService.getLessonsByGroupId(groupId, start,end).stream()
                 .map(lessonMapper::toResponse)
                 .collect(Collectors.toList());
+
+        ApiResponse<List<LessonResponse>> response = new ApiResponse<> (true,lesson);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping
-    public ResponseEntity<LessonResponse> createLesson(@RequestBody LessonRequest request) {
+    public ResponseEntity<ApiResponse<LessonResponse>> createLesson(@RequestBody LessonRequest request) {
         logger.info("POST /api/lessons - Создание занятия. Request: {}", request);
 
         Lesson lesson = lessonMapper.toEntity(request);
@@ -87,24 +100,26 @@ public class LessonController {
         LessonResponse response = lessonMapper.toResponse(lessonWithDetails);
         logger.info("Создан Response: {}", response);
 
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(response);
+        ApiResponse<LessonResponse> apiResponse = new ApiResponse<>(true, response);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(apiResponse);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<LessonResponse> updateLesson(@PathVariable Long id, @RequestBody LessonRequest request) {
+    public ResponseEntity<ApiResponse<LessonResponse>> updateLesson(@PathVariable Long id, @RequestBody LessonRequest request) {
         Lesson lesson = lessonMapper.toEntity(request);
         Lesson updatedLesson = lessonService.updateLesson(id, lesson);
-
-        // ПЕРЕЗАГРУЖАЕМ с связанными сущностями
         Lesson lessonWithDetails = lessonService.getLessonById(updatedLesson.getId());
+        LessonResponse lessonResponse = lessonMapper.toResponse(lessonWithDetails);
 
-        return ResponseEntity.ok(lessonMapper.toResponse(lessonWithDetails));
+        ApiResponse<LessonResponse> response = new ApiResponse<>(true, lessonResponse);
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteLesson(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> deleteLesson(@PathVariable Long id) {
         lessonService.deleteLesson(id);
-        return ResponseEntity.noContent().build();
+        ApiResponse<Void> response = new ApiResponse<>(true,null);
+        return ResponseEntity.ok(response);
     }
 }

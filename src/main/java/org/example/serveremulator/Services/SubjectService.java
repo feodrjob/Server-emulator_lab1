@@ -1,32 +1,21 @@
 package org.example.serveremulator.Services;
 
 import jakarta.transaction.Transactional;
-import org.example.serveremulator.Entityes.Lesson;
 import org.example.serveremulator.Entityes.Subject;
 import org.example.serveremulator.Enums.ErrorCode;
 import org.example.serveremulator.Exceptions.NotFoundException;
 import org.example.serveremulator.Exceptions.ValidationException;
-import org.example.serveremulator.Repositories.AttendanceRepository;
-import org.example.serveremulator.Repositories.LessonRepository;
 import org.example.serveremulator.Repositories.SubjectRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
-
 @Service
 @Transactional
 public class SubjectService {
     private final SubjectRepository subjectRepository;
-    private final LessonRepository lessonRepository;
-    private final AttendanceRepository attendanceRepository;
 
-    public SubjectService(SubjectRepository subjectRepository,
-                          LessonRepository lessonRepository,
-                          AttendanceRepository attendanceRepository) {
+    public SubjectService(SubjectRepository subjectRepository) {
         this.subjectRepository = subjectRepository;
-        this.lessonRepository = lessonRepository;
-        this.attendanceRepository = attendanceRepository;
     }
 
     public List<Subject> getAllSubjects() {
@@ -36,7 +25,7 @@ public class SubjectService {
     public Subject getSubjectById(Long id) {
         if (id == null || id <= 0) {
             throw new ValidationException(
-                    ErrorCode.VALIDATION_ERROR,
+                    ErrorCode.SUBJECT_INVALID_ID,
                     "Subject ID must be positive number"
             );
         }
@@ -58,7 +47,7 @@ public class SubjectService {
 
         if (subject.getName() == null || subject.getName().trim().isEmpty()) {
             throw new ValidationException(
-                    ErrorCode.VALIDATION_ERROR,
+                    ErrorCode.SUBJECT_NAME_EMPTY,
                     "Subject name is required"
             );
         }
@@ -67,7 +56,7 @@ public class SubjectService {
 
         if (subjectRepository.existsByName(subjectName)) {
             throw new ValidationException(
-                    ErrorCode.VALIDATION_ERROR,
+                    ErrorCode.SUBJECT_ALREADY_EXISTS,
                     "Subject with name '" + subjectName + "' already exists"
             );
         }
@@ -79,7 +68,7 @@ public class SubjectService {
     public Subject updateSubject(Long id, Subject subject) {
         if (id == null || id <= 0) {
             throw new ValidationException(
-                    ErrorCode.VALIDATION_ERROR,
+                    ErrorCode.SUBJECT_INVALID_ID,
                     "Subject ID must be positive number"
             );
         }
@@ -97,7 +86,7 @@ public class SubjectService {
 
             if (subjectRepository.existsByName(newName)) {
                 throw new ValidationException(
-                        ErrorCode.VALIDATION_ERROR,
+                        ErrorCode.SUBJECT_ALREADY_EXISTS,
                         "Subject with name '" + newName + "' already exists"
                 );
             }
@@ -109,7 +98,7 @@ public class SubjectService {
     public void deleteSubject(Long id) {
         if (id == null || id <= 0) {
             throw new ValidationException(
-                    ErrorCode.VALIDATION_ERROR,
+                    ErrorCode.SUBJECT_INVALID_ID,
                     "Subject ID must be positive number"
             );
         }
@@ -119,17 +108,6 @@ public class SubjectService {
                         ErrorCode.SUBJECT_NOT_FOUND,
                         "Subject with id " + id + " not found"
                 ));
-
-        List<Lesson> lessons = lessonRepository.findAll().stream()
-                .filter(lesson -> lesson.getSubject() != null &&
-                        lesson.getSubject().getId().equals(id))
-                .collect(Collectors.toList());
-
-        for (Lesson lesson : lessons) {
-            attendanceRepository.deleteByLessonId(lesson.getId());
-        }
-
-        lessonRepository.deleteBySubjectId(id);
 
         subjectRepository.delete(subject);
     }

@@ -1,5 +1,6 @@
 package org.example.serveremulator.Exceptions;
 
+import org.example.serveremulator.Enums.ErrorCode;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -29,7 +30,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException e) {
         ErrorResponse error = new ErrorResponse(
-                HttpStatus.BAD_REQUEST,
+                ErrorCode.VALIDATION_ERROR.getCode(),
                 e.getMessage(),
                 "Invalid argument provided"
         );
@@ -42,7 +43,7 @@ public class GlobalExceptionHandler {
         e.printStackTrace();
 
         ErrorResponse error = new ErrorResponse(
-                HttpStatus.INTERNAL_SERVER_ERROR,
+                ErrorCode.INTERNAL_ERROR.getCode(),
                 "Internal server error",
                 e.getMessage()
         );

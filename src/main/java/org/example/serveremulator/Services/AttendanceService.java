@@ -34,7 +34,7 @@ public class AttendanceService {
     public Attendance getAttendanceByLessonId(Long lessonId) {
         if (lessonId == null || lessonId <= 0) {
             throw new ValidationException(
-                    ErrorCode.VALIDATION_ERROR,
+                    ErrorCode.VALIDATION_INVALID_ID,
                     "Lesson ID must be positive number"
             );
         }
@@ -49,13 +49,13 @@ public class AttendanceService {
     public Attendance createAttendance(Long lessonId, List<Long> presentStudentIds) {
         if (lessonId == null || lessonId <= 0) {
             throw new ValidationException(
-                    ErrorCode.VALIDATION_ERROR,
+                    ErrorCode.VALIDATION_INVALID_ID,
                     "Lesson ID must be positive number"
             );
         }
         if (presentStudentIds == null) {
             throw new ValidationException(
-                    ErrorCode.VALIDATION_ERROR,
+                    ErrorCode.ATTENDANCE_EMPTY_STUDENTS,
                     "Student IDs cannot be null"
             );
         }
@@ -85,7 +85,7 @@ public class AttendanceService {
         for (Student student : students) {
             if (!student.getGroup().getId().equals(lesson.getGroup().getId())) {
                 throw new ValidationException(
-                        ErrorCode.STUDENT_NOT_IN_GROUP,
+                        ErrorCode.STUDENT_NOT_IN_GROUP_FOR_LESSON,
                         "Student " + student.getId() + " is not from lesson's group"
                 );
             }
@@ -100,13 +100,13 @@ public class AttendanceService {
     public Attendance updateAttendance(Long lessonId, List<Long> presentStudentIds) {
         if (lessonId == null || lessonId <= 0) {
             throw new ValidationException(
-                    ErrorCode.VALIDATION_ERROR,
+                    ErrorCode.VALIDATION_INVALID_ID,
                     "Lesson ID must be positive number"
             );
         }
         if (presentStudentIds == null) {
             throw new ValidationException(
-                    ErrorCode.VALIDATION_ERROR,
+                    ErrorCode.ATTENDANCE_EMPTY_STUDENTS,
                     "Student IDs cannot be null"
             );
         }
@@ -130,7 +130,7 @@ public class AttendanceService {
         for (Student student : students) {
             if (!student.getGroup().getId().equals(lesson.getGroup().getId())) {
                 throw new ValidationException(
-                        ErrorCode.STUDENT_NOT_IN_GROUP,
+                        ErrorCode.STUDENT_NOT_IN_GROUP_FOR_LESSON,
                         "Student " + student.getId() + " is not from lesson's group"
                 );
             }
@@ -144,18 +144,17 @@ public class AttendanceService {
     public void deleteAttendance(Long lessonId) {
         if (lessonId == null || lessonId <= 0) {
             throw new ValidationException(
-                    ErrorCode.VALIDATION_ERROR,
+                    ErrorCode.VALIDATION_INVALID_ID,
                     "Lesson ID must be positive number"
             );
         }
 
-        if (!attendanceRepository.existsByLessonId(lessonId)) {
-            throw new NotFoundException(
-                    ErrorCode.ATTENDANCE_NOT_FOUND,
-                    "Attendance not found for lesson id: " + lessonId
-            );
-        }
+        Attendance attendance = attendanceRepository.findByLessonId(lessonId)
+                .orElseThrow(() -> new NotFoundException(
+                        ErrorCode.ATTENDANCE_NOT_FOUND,
+                        "Attendance not found for lesson id: " + lessonId
+                ));
 
-        attendanceRepository.deleteByLessonId(lessonId);
+        attendanceRepository.delete(attendance);
     }
 }

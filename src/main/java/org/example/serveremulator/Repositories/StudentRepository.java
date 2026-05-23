@@ -16,9 +16,4 @@ import java.util.List;
 public interface StudentRepository extends JpaRepository<Student, Long> {
 
     List<Student> findByGroupId(Long groupId);
-
-    @Modifying
-    @Transactional
-    @Query("DELETE FROM Student s WHERE s.group.id = :groupId")
-    void deleteByGroupId(@Param("groupId") Long groupId);
 }

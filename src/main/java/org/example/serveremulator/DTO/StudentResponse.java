@@ -1,6 +1,5 @@
 package org.example.serveremulator.DTO;
 
-import org.example.serveremulator.Enums.StudentEnum;
 
 public class StudentResponse {
     private Long id;

@@ -1,0 +1,162 @@
+@startuml
+title Class Diagram: Trip Together Backend
+
+package "Entity" {
+  class Trip {
+    - id: Long
+    - name: String
+    - startDate: LocalDate
+    - endDate: LocalDate
+    - paymentIds: List<Long>
+    - memberIds: List<Long>
+    - budgetCategoryIds: List<Long>
+    + getTotalPlannedBudget(): Double
+    + getTotalActualSpent(): Double
+  }
+
+  class Member {
+    - id: Long
+    - username: String
+    - phoneNumber: String
+    -
+  }
+
+  class BudgetCategory {
+    - id: Long
+    - costCategory: CostCategory
+    - plannedAmount: Double
+    - actualSpent: Double
+    + updateActualSpent(): void
+    + getRemainingBudget(): Double
+  }
+
+  class Payment {
+    - id: Long
+    - description: String
+    - amount: Double
+    - payerId : Long
+    - debtorIds : List<Long>
+    - budgetCategoryId: Long
+    - paymentDate: LocalDate
+    - photoUrl: String
+  }
+
+  enum CostCategory {
+    FOOD
+    MARKET
+    AIRLINE
+    HOTEL
+    TRANSPORT
+    ENTERTAINMENT
+    OTHER
+  }
+}
+
+package "DTO" {
+  class TripDto {
+    - name: String
+    - startDate: LocalDate
+    - endDate: LocalDate
+  }
+
+  class PaymentDto {
+    - description: String
+    - amount: Double
+    - categoryId: Long
+    - payerId: Long
+    - debtorIds: List<Long>
+  }
+
+  class UserDto {
+    - username: String
+  }
+}
+
+package "Controller" {
+  class TripController {
+    + createTrip()
+    + addParticipant()
+    + getBudgetCategories()
+  }
+
+  class PaymentController {
+    + createPayment()
+    + addDebtor()
+    + getPaymentsByTrip()
+  }
+
+  class UserController {
+    + createUser()
+    + getUserById()
+  }
+}
+
+package "Service" {
+  class TripService {
+    + createTrip()
+    + addBudgetCategory()
+    + updatePlannedAmount()
+  }
+
+  class PaymentService {
+    + createPayment()
+    + updatePayment()
+    + calculateDebts()
+  }
+
+  class UserService {
+    + addUser()
+    + getUserById()
+  }
+}
+
+package "Repository" {
+  interface TripRepository {
+    + findById()
+    + save()
+  }
+
+  interface PaymentRepository {
+    + findByTripId()
+    + findByPayerId()
+  }
+
+  interface UserRepository {
+    + findByUsername()
+    + existsByPhoneNumber()
+  }
+}
+
+' ===== Entity relationships (ПО JPA) =====
+
+' ===== Entity relations =====
+
+Trip "1" o-- "*" Member : participants\ntrip
+Trip "1" *-- "*" BudgetCategory : budgetCategories\ntrip
+Trip "1" *-- "*" Payment : payments\ntrip
+
+BudgetCategory "*" --> "1" CostCategory : costCategory
+
+Payment "*" --> "1" Member : payer\npayments
+Payment "*" -- "*" Member : debtors\ndebts
+Payment "*" --> "1" BudgetCategory : category\npayments
+Payment "*" --> "1" Trip : trip\npayments
+
+' ===== Layer dependencies =====
+TripController ..> TripService : использует
+PaymentController ..> PaymentService : использует
+UserController ..> UserService : использует
+
+TripService ..> TripRepository : использует
+PaymentService ..> PaymentRepository : использует
+UserService ..> UserRepository : использует
+
+TripService ..> TripDto : возвращает
+PaymentService ..> PaymentDto : возвращает
+UserService ..> UserDto : возвращает
+
+note bottom of BudgetCategory
+  plannedAmount - планируемый бюджет
+  actualSpent - фактические траты
+end note
+@enduml

@@ -2,29 +2,26 @@ package org.example.serveremulator.Entityes;
 
 
 import jakarta.persistence.*;
-
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
 @Entity
-@Table(name = "attendance ")
+@Table(name = "attendance")
 public class Attendance {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-
-    @ManyToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lesson_id")
     private Lesson lesson;
 
-
     @ManyToMany
     @JoinTable(
-            name = "Attendance_students",
-            joinColumns = @JoinColumn (name = "Attendance_id"),
-            inverseJoinColumns = @JoinColumn (name = "students_id")
+            name = "attendance_students",
+            joinColumns = @JoinColumn(name = "attendance_id"),
+            inverseJoinColumns = @JoinColumn(name = "student_id")
     )
     private Set<Student> presentStudents = new HashSet<>();
 
@@ -53,16 +50,18 @@ public class Attendance {
     public void setPresentStudents(Set<Student> presentStudents) {
         this.presentStudents = presentStudents;
     }
-    public void addPresentStudent(Student  student) {
+
+    public void addPresentStudent(Student student) {
         presentStudents.add(student);
     }
+
     public void removePresentStudent(Student student) {
         presentStudents.remove(student);
     }
+
     public boolean isStudentPresent(Student student) {
         return presentStudents.contains(student);
     }
-
 
     @Override
     public boolean equals(Object o) {

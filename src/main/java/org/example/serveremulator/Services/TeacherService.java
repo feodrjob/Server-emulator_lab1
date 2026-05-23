@@ -4,6 +4,9 @@ import org.example.serveremulator.Entityes.Teacher;
 import org.example.serveremulator.Repositories.LessonRepository;
 import org.example.serveremulator.Repositories.StudentRepository;
 import org.example.serveremulator.Repositories.TeacherRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -11,26 +14,25 @@ import java.util.Optional;
 import org.example.serveremulator.Enums.ErrorCode;
 import org.example.serveremulator.Exceptions.NotFoundException;
 import org.example.serveremulator.Exceptions.ValidationException;
-
 @Service
 @Transactional
 public class TeacherService {
     private final TeacherRepository teacherRepository;
-    private final LessonRepository lessonRepository;
 
-    public TeacherService(TeacherRepository teacherRepository, LessonRepository lessonRepository) {
+    public TeacherService(TeacherRepository teacherRepository) {
         this.teacherRepository = teacherRepository;
-        this.lessonRepository = lessonRepository;
     }
 
-    public List<Teacher> findAll() {
-        return teacherRepository.findAll();
+    public Page<Teacher> findAll (int page, int size) {
+        //создаем объект запроса страницы
+        Pageable pageble = PageRequest.of(page, size);
+        return teacherRepository.findAll(pageble);
     }
 
     public Teacher findById(Long id) {
         if (id == null || id <= 0) {
             throw new ValidationException(
-                    ErrorCode.VALIDATION_ERROR,
+                    ErrorCode.TEACHER_INVALID_ID,
                     "Teacher ID must be positive number"
             );
         }
@@ -41,6 +43,7 @@ public class TeacherService {
                         "Teacher with id " + id + " not found"
                 ));
     }
+
     public Teacher createTeacher(Teacher teacher) {
         if (teacher == null) {
             throw new ValidationException(
@@ -51,31 +54,29 @@ public class TeacherService {
 
         if (teacher.getFirstName() == null || teacher.getFirstName().trim().isEmpty()) {
             throw new ValidationException(
-                    ErrorCode.VALIDATION_ERROR,
+                    ErrorCode.TEACHER_INVALID_NAME,
                     "First name is required"
             );
         }
         if (teacher.getLastName() == null || teacher.getLastName().trim().isEmpty()) {
             throw new ValidationException(
-                    ErrorCode.VALIDATION_ERROR,
+                    ErrorCode.TEACHER_INVALID_NAME,
                     "Last name is required"
             );
         }
 
-        // Исправляем опечатку: getMidleName() -> getMiddleName()
-        String middleName = teacher.getMidleName(); // или teacher.getMiddleName() если исправили в сущности
+        String middleName = teacher.getMidleName();
 
         if (teacherRepository.existsByLastNameAndFirstNameAndMiddleName(
                 teacher.getLastName(),
                 teacher.getFirstName(),
                 middleName)) {
             throw new ValidationException(
-                    ErrorCode.VALIDATION_ERROR,
+                    ErrorCode.TEACHER_ALREADY_EXISTS,
                     "Teacher with this name already exists"
             );
         }
 
-        // Тримим строки
         teacher.setFirstName(teacher.getFirstName().trim());
         teacher.setLastName(teacher.getLastName().trim());
         if (teacher.getMidleName() != null) {
@@ -88,7 +89,7 @@ public class TeacherService {
     public Teacher updateTeacher(Long id, Teacher teacher) {
         if (id == null || id <= 0) {
             throw new ValidationException(
-                    ErrorCode.VALIDATION_ERROR,
+                    ErrorCode.TEACHER_INVALID_ID,
                     "Teacher ID must be positive number"
             );
         }
@@ -99,7 +100,6 @@ public class TeacherService {
                         "Teacher with id " + id + " not found"
                 ));
 
-        // Исправляем логику условий (было ИЛИ, должно быть И)
         if (teacher.getFirstName() != null && !teacher.getFirstName().trim().isEmpty()) {
             existingTeacher.setFirstName(teacher.getFirstName().trim());
         }
@@ -118,7 +118,7 @@ public class TeacherService {
     public void deleteTeacher(Long id) {
         if (id == null || id <= 0) {
             throw new ValidationException(
-                    ErrorCode.VALIDATION_ERROR,
+                    ErrorCode.TEACHER_INVALID_ID,
                     "Teacher ID must be positive number"
             );
         }
@@ -129,7 +129,6 @@ public class TeacherService {
                         "Teacher with id " + id + " not found"
                 ));
 
-        lessonRepository.deleteByTeacherId(id);
         teacherRepository.delete(teacher);
     }
 }

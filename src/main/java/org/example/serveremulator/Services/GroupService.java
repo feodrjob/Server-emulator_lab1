@@ -7,8 +7,6 @@ import org.example.serveremulator.Enums.ErrorCode;
 import org.example.serveremulator.Exceptions.NotFoundException;
 import org.example.serveremulator.Exceptions.ValidationException;
 import org.example.serveremulator.Repositories.GroupRepository;
-import org.example.serveremulator.Repositories.LessonRepository;
-import org.example.serveremulator.Repositories.StudentRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,15 +15,9 @@ import java.util.List;
 @Transactional
 public class GroupService {
     private final GroupRepository groupRepository;
-    private final StudentRepository studentRepository;
-    private final LessonRepository lessonRepository;
 
-    public GroupService(GroupRepository groupRepository,
-                        StudentRepository studentRepository,
-                        LessonRepository lessonRepository) {
+    public GroupService(GroupRepository groupRepository) {
         this.groupRepository = groupRepository;
-        this.studentRepository = studentRepository;
-        this.lessonRepository = lessonRepository;
     }
 
     public List<Group> getAllGroups() {
@@ -35,15 +27,15 @@ public class GroupService {
     public Group getGroupById(Long id) {
         if (id == null || id <= 0) {
             throw new ValidationException(
-                    ErrorCode.VALIDATION_ERROR,
-                    "Group ID must be positive number"
+                    ErrorCode.GROUP_INVALID_ID,
+                    "ID группы должен быть положительным числом"
             );
         }
 
         return groupRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(
                         ErrorCode.GROUP_NOT_FOUND,
-                        "Group with id " + id + " not found"
+                        "Группа с ID " + id + " не найдена"
                 ));
     }
 
@@ -51,14 +43,14 @@ public class GroupService {
         if (group == null) {
             throw new ValidationException(
                     ErrorCode.VALIDATION_ERROR,
-                    "Group cannot be null"
+                    "Объект группы не может быть null"
             );
         }
 
         if (group.getName() == null || group.getName().trim().isEmpty()) {
             throw new ValidationException(
                     ErrorCode.GROUP_NAME_EMPTY,
-                    "Group name cannot be empty"
+                    "Название группы не может быть пустым"
             );
         }
 
@@ -67,7 +59,7 @@ public class GroupService {
         if (groupRepository.existsByName(groupName)) {
             throw new ValidationException(
                     ErrorCode.GROUP_ALREADY_EXISTS,
-                    "Group with name '" + groupName + "' already exists"
+                    "Группа с названием '" + groupName + "' уже существует"
             );
         }
 
@@ -78,15 +70,15 @@ public class GroupService {
     public Group updateGroup(Long id, Group groupDetails) {
         if (id == null || id <= 0) {
             throw new ValidationException(
-                    ErrorCode.VALIDATION_ERROR,
-                    "Invalid group ID: " + id
+                    ErrorCode.GROUP_INVALID_ID,
+                    "Неверный ID группы: " + id
             );
         }
 
         Group existingGroup = groupRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(
                         ErrorCode.GROUP_NOT_FOUND,
-                        "Group with id " + id + " not found"
+                        "Группа с ID " + id + " не найдена"
                 ));
 
         if (groupDetails.getName() != null && !groupDetails.getName().trim().isEmpty()) {
@@ -96,7 +88,7 @@ public class GroupService {
                 if (groupRepository.existsByName(newName)) {
                     throw new ValidationException(
                             ErrorCode.GROUP_ALREADY_EXISTS,
-                            "Group with name '" + newName + "' already exists"
+                            "Группа с названием '" + newName + "' уже существует"
                     );
                 }
                 existingGroup.setName(newName);
@@ -109,23 +101,17 @@ public class GroupService {
     public void deleteGroup(Long id) {
         if (id == null || id <= 0) {
             throw new ValidationException(
-                    ErrorCode.VALIDATION_ERROR,
-                    "Invalid group ID: " + id
+                    ErrorCode.GROUP_INVALID_ID,
+                    "Неверный ID группы: " + id
             );
         }
 
         Group group = groupRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(
                         ErrorCode.GROUP_NOT_FOUND,
-                        "Group with id " + id + " not found"
+                        "Группа с ID " + id + " не найдена"
                 ));
 
-        studentRepository.deleteByGroupId(id);
-
-        // 2. Удаляем все занятия этой группы
-        lessonRepository.deleteByGroupId(id);
-
-        // 3. Удаляем саму группу
         groupRepository.delete(group);
     }
 

@@ -1,6 +1,7 @@
 package org.example.serveremulator.Controllers;
 
 
+import org.example.serveremulator.DTO.ApiResponse;
 import org.example.serveremulator.DTO.GroupRequest;
 import org.example.serveremulator.DTO.GroupResponse;
 import org.example.serveremulator.Entityes.Group;
@@ -25,36 +26,52 @@ public class GroupController {
     }
 
     @GetMapping
-    public List<GroupResponse> getAllGroups() {
-        return groupService.getAllGroups().stream()
+    public ResponseEntity<ApiResponse<List<GroupResponse>>> getAllGroups() {
+        //Сначала поулчим список
+        List<GroupResponse> groups = groupService.getAllGroups().stream()
                 .map(groupMapper::toResponse)
                 .collect(Collectors.toList());
+        //Упаковали в ApiResponse
+        ApiResponse<List<GroupResponse>> response = new ApiResponse<>(true,groups);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<GroupResponse> getGroup(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<GroupResponse>> getGroup(@PathVariable Long id) {
         Group group = groupService.getGroupById(id);
-        return ResponseEntity.ok(groupMapper.toResponse(group));
+        GroupResponse groupResponse = groupMapper.toResponse(group);
+
+        //Упаковываем
+        ApiResponse<GroupResponse> response = new ApiResponse<>(true,groupResponse);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping
-    public ResponseEntity<GroupResponse> createGroup(@RequestBody GroupRequest request) {
+    public ResponseEntity<ApiResponse<GroupResponse>> createGroup(@RequestBody GroupRequest request) {
         Group group = groupMapper.toEntity(request);
         Group createdGroup = groupService.createGroup(group);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(groupMapper.toResponse(createdGroup));
+        GroupResponse groupResponse = groupMapper.toResponse(createdGroup);
+
+        ApiResponse<GroupResponse> response = new ApiResponse<>(true,groupResponse);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<GroupResponse> updateGroup(@PathVariable Long id, @RequestBody GroupRequest request) {
+    public ResponseEntity<ApiResponse<GroupResponse>> updateGroup(@PathVariable Long id, @RequestBody GroupRequest request) {
         Group group = groupMapper.toEntity(request);
         Group updatedGroup = groupService.updateGroup(id, group);
-        return ResponseEntity.ok(groupMapper.toResponse(updatedGroup));
+        GroupResponse groupResponse = groupMapper.toResponse(updatedGroup);
+
+        ApiResponse<GroupResponse> response = new ApiResponse<>(true, groupResponse);
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteGroup(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> deleteGroup(@PathVariable Long id) {
         groupService.deleteGroup(id);
-        return ResponseEntity.noContent().build();
+
+        //нет поля data, кидаем null
+        ApiResponse<Void> response = new ApiResponse<>(true,null);
+        return ResponseEntity.ok(response);
     }
 }

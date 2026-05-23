@@ -2,6 +2,7 @@ package org.example.serveremulator.Controllers;
 
 
 
+import org.example.serveremulator.DTO.ApiResponse;
 import org.example.serveremulator.DTO.AttendanceRequest;
 import org.example.serveremulator.DTO.AttendanceResponse;
 import org.example.serveremulator.Entityes.Attendance;
@@ -24,42 +25,42 @@ public class AttendanceController {
     }
 
     @GetMapping("/lesson/{lessonId}")
-    public ResponseEntity<AttendanceResponse> getAttendanceByLessonId(@PathVariable Long lessonId) {
-        // Убрали try-catch, исключения обрабатываются глобально
-        return ResponseEntity.ok(attendanceMapper.toResponse(
-                attendanceService.getAttendanceByLessonId(lessonId)
-        ));
+    public ResponseEntity<ApiResponse<AttendanceResponse>>getAttendanceByLessonId(@PathVariable Long lessonId) {
+        Attendance attendance = attendanceService.getAttendanceByLessonId(lessonId);
+        AttendanceResponse attendanceResponse = attendanceMapper.toResponse(attendance);
+
+        ApiResponse<AttendanceResponse> response = new ApiResponse<>(true,attendanceResponse);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping
-    public ResponseEntity<AttendanceResponse> createAttendance(@RequestBody AttendanceRequest request) {
-        // Убрали try-catch и избыточное создание сущности
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(attendanceMapper.toResponse(
-                        attendanceService.createAttendance(
-                                request.getLessonId(),
-                                request.getPresentStudentIds()
-                        )
-                ));
+    public ResponseEntity<ApiResponse<AttendanceResponse>> createAttendance(@RequestBody AttendanceRequest request) {
+        Attendance createdAttendance = attendanceService.createAttendance(
+                request.getLessonId(),
+                request.getPresentStudentIds()
+        );
+        AttendanceResponse attendanceResponse = attendanceMapper.toResponse(createdAttendance);
+
+        ApiResponse<AttendanceResponse> apiResponse = new ApiResponse<>(true, attendanceResponse);
+        return ResponseEntity.status(HttpStatus.CREATED).body(apiResponse);
     }
 
     @PutMapping("/lesson/{lessonId}")
-    public ResponseEntity<AttendanceResponse> updateAttendance(
-            @PathVariable Long lessonId,
-            @RequestBody AttendanceRequest request) {
-        // Убрали try-catch
-        return ResponseEntity.ok(attendanceMapper.toResponse(
-                attendanceService.updateAttendance(
-                        lessonId,
-                        request.getPresentStudentIds()
-                )
-        ));
+    public ResponseEntity<ApiResponse<AttendanceResponse>> updateAttendance(@PathVariable Long lessonId, @RequestBody AttendanceRequest request) {
+        Attendance updatedAttendance = attendanceService.updateAttendance(
+                lessonId,
+                request.getPresentStudentIds()
+        );
+        AttendanceResponse attendanceResponse = attendanceMapper.toResponse(updatedAttendance);
+
+        ApiResponse<AttendanceResponse> apiResponse = new ApiResponse<>(true, attendanceResponse);
+        return ResponseEntity.ok(apiResponse);
     }
 
     @DeleteMapping("/lesson/{lessonId}")
-    public ResponseEntity<Void> deleteAttendance(@PathVariable Long lessonId) {
-        // Убрали try-catch
+    public ResponseEntity<ApiResponse<Void>> deleteAttendance(@PathVariable Long lessonId) {
         attendanceService.deleteAttendance(lessonId);
-        return ResponseEntity.noContent().build();
+        ApiResponse<Void> response = new ApiResponse<>(true,null);
+        return ResponseEntity.ok(response);
     }
 }

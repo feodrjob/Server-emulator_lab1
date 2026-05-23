@@ -1,8 +1,6 @@
 package org.example.serveremulator.Entityes;
 
-
 import jakarta.persistence.*;
-
 import java.time.LocalDate;
 import java.util.Objects;
 
@@ -20,16 +18,19 @@ public class Lesson {
     private Integer lessonNumber;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn (name = "teacher_id")
+    @JoinColumn(name = "teacher_id")
     private Teacher teacher;
 
-    @ManyToOne (fetch = FetchType.LAZY)
-    @JoinColumn (name = "subject_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "subject_id")
     private Subject subject;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_id")
     private Group group;
+
+    @OneToOne(mappedBy = "lesson", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Attendance attendance;
 
     public Lesson() {}
 
@@ -85,8 +86,23 @@ public class Lesson {
         return group;
     }
 
-    public void setGroup( Group group) {
+    public void setGroup(Group group) {
         this.group = group;
+    }
+
+    public Attendance getAttendance() {
+        return attendance;
+    }
+
+    public void setAttendance(Attendance attendance) {
+        if (attendance == null) {
+            if (this.attendance != null) {
+                this.attendance.setLesson(null);
+            }
+        } else {
+            attendance.setLesson(this);
+        }
+        this.attendance = attendance;
     }
 
     @Override
