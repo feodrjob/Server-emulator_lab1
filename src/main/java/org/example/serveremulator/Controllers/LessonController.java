@@ -1,11 +1,13 @@
 package org.example.serveremulator.Controllers;
 
+import jakarta.validation.Valid;
 import org.example.serveremulator.DTO.ApiResponse;
 import org.example.serveremulator.DTO.LessonRequest;
 import org.example.serveremulator.DTO.LessonResponse;
 import org.example.serveremulator.Entityes.Lesson;
 import org.example.serveremulator.Mappers.LessonMapper;
 import org.example.serveremulator.Services.LessonService;
+import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,12 +35,19 @@ public class LessonController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<LessonResponse>>> getAllLessons() {
-        List<LessonResponse> lessons = lessonService.getAllLessons().stream()
-                .map(lessonMapper::toResponse)
-                .collect(Collectors.toList());
-
-        ApiResponse<List<LessonResponse>> response = new ApiResponse<>(true,lessons);
+    public ResponseEntity<ApiResponse<Page<LessonResponse>>> getLessons(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false) Long groupId,     // Необязательный фильтр
+            @RequestParam(required = false) Long teacherId,   // Необязательный фильтр
+            @RequestParam(defaultValue = "0") int page,       // Пагинация: номер страницы (с 0)
+            @RequestParam(defaultValue = "10") int size       // Пагинация: размер страницы
+    ) {
+        //получаем фильтрованные данные
+        Page<Lesson> lessonPage = lessonService.getLessonFiltred(startDate, endDate, groupId, teacherId, page, size);
+        //оборачиваем в ответ
+        Page<LessonResponse> responsePage = lessonPage.map(lessonMapper::toResponse);
+        ApiResponse<Page<LessonResponse>> response = new ApiResponse<>(true, responsePage);
         return ResponseEntity.ok(response);
     }
 
@@ -51,36 +60,8 @@ public class LessonController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/teacher/{teacherId}")
-    public ResponseEntity<ApiResponse<List<LessonResponse>>> getLessonsByTeacher(
-            @PathVariable Long teacherId,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
-
-        List<LessonResponse> lesson = lessonService.getLessonsByTeacherId(teacherId,start,end).stream()
-                .map(lessonMapper::toResponse)
-                .collect(Collectors.toList());
-
-        ApiResponse<List<LessonResponse>> response = new ApiResponse<> (true,lesson);
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/group/{groupId}")
-    public ResponseEntity<ApiResponse<List<LessonResponse>>> getLessonsByGroup(
-            @PathVariable Long groupId,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
-
-        List<LessonResponse> lesson = lessonService.getLessonsByGroupId(groupId, start,end).stream()
-                .map(lessonMapper::toResponse)
-                .collect(Collectors.toList());
-
-        ApiResponse<List<LessonResponse>> response = new ApiResponse<> (true,lesson);
-        return ResponseEntity.ok(response);
-    }
-
     @PostMapping
-    public ResponseEntity<ApiResponse<LessonResponse>> createLesson(@RequestBody LessonRequest request) {
+    public ResponseEntity<ApiResponse<LessonResponse>> createLesson(@Valid @RequestBody LessonRequest request) {
         logger.info("POST /api/lessons - Создание занятия. Request: {}", request);
 
         Lesson lesson = lessonMapper.toEntity(request);
@@ -106,7 +87,7 @@ public class LessonController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<LessonResponse>> updateLesson(@PathVariable Long id, @RequestBody LessonRequest request) {
+    public ResponseEntity<ApiResponse<LessonResponse>> updateLesson(@PathVariable Long id,@Valid @RequestBody LessonRequest request) {
         Lesson lesson = lessonMapper.toEntity(request);
         Lesson updatedLesson = lessonService.updateLesson(id, lesson);
         Lesson lessonWithDetails = lessonService.getLessonById(updatedLesson.getId());

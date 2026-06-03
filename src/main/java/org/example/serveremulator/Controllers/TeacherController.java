@@ -1,5 +1,6 @@
 package org.example.serveremulator.Controllers;
 
+import jakarta.validation.Valid;
 import org.example.serveremulator.DTO.ApiResponse;
 import org.example.serveremulator.DTO.TeacherRequest;
 import org.example.serveremulator.DTO.TeacherResponse;
@@ -49,7 +50,7 @@ public class TeacherController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<TeacherResponse>> createTeacher(@RequestBody TeacherRequest request) {
+    public ResponseEntity<ApiResponse<TeacherResponse>> createTeacher(@Valid @RequestBody TeacherRequest request) {
         Teacher teacher = teacherMapper.toEntity(request);
         Teacher createdTeacher = teacherService.createTeacher(teacher);
         TeacherResponse teacherResponse = teacherMapper.toResponse(createdTeacher);
@@ -59,7 +60,7 @@ public class TeacherController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<TeacherResponse>> updateTeacher(@PathVariable Long id, @RequestBody TeacherRequest request) {
+    public ResponseEntity<ApiResponse<TeacherResponse>> updateTeacher(@PathVariable Long id,@Valid @RequestBody TeacherRequest request) {
         Teacher teacher = teacherMapper.toEntity(request);
         Teacher updatedTeacher = teacherService.updateTeacher(id, teacher);
         TeacherResponse teacherResponse = teacherMapper.toResponse(updatedTeacher);

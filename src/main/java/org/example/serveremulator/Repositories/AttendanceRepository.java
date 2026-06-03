@@ -17,4 +17,7 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
     @Modifying
     @Query("DELETE FROM Attendance a WHERE :student MEMBER OF a.presentStudents")
     void deleteStudentFromAllAttendances(@Param("student") Student student);
+    //Если студент посетил хотя бы 1 раз, значит он привязан к итории занятий
+    @Query("SELECT COUNT(a) > 0 FROM Attendance a WHERE :student MEMBER OF  a.presentStudents")
+    boolean isStudentPresentInAnyAttendance(@Param("student") Student student);
 }

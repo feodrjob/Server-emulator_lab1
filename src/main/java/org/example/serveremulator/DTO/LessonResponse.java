@@ -1,6 +1,7 @@
 package org.example.serveremulator.DTO;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public class LessonResponse {
     private Long id;
@@ -9,6 +10,10 @@ public class LessonResponse {
     private String teacherName;       // ФИО преподавателя
     private String subjectName;       // Название дисциплины
     private String groupName;         // Название группы
+    private List<String> presentStudents;
+
+    public List<String> getPresentStudents() {return presentStudents;}
+    public void setPresentStudents(List<String> presentStudents) {this.presentStudents = presentStudents;}
 
     public Long getId() {
         return id;

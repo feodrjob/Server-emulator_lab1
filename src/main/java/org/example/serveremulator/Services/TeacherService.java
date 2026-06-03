@@ -128,6 +128,13 @@ public class TeacherService {
                         ErrorCode.TEACHER_NOT_FOUND,
                         "Teacher with id " + id + " not found"
                 ));
+        //есть ли занятия у преподавателя
+        if (!teacher.getLessons().isEmpty()) {
+            throw new ValidationException(
+                    ErrorCode.TEACHER_HAS_LESSONS,
+                    "Teacher with id " + id + " has lessons"
+            );
+        }
 
         teacherRepository.delete(teacher);
     }

@@ -1,50 +1,39 @@
 package org.example.serveremulator.DTO;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 
 public class LessonRequest {
-    private LocalDate date;          // Дата занятия
-    private Integer lessonNumber;    // Номер пары (1-8)
-    private Long teacherId;          // ID преподавателя
-    private Long subjectId;          // ID дисциплины
-    private Long groupId;            // ID группы
 
-    public LocalDate getDate() {
-        return date;
-    }
+    @NotNull(message = "Дата не может быть пустой")
+    private LocalDate date;
 
-    public void setDate(LocalDate date) {
-        this.date = date;
-    }
+    @NotNull(message = "Номер пары не может быть пустым")
+    @Min(value = 1, message = "Номер пары не может быть меньше 1")
+    @Max(value = 8, message = "Номер пары не может быть больше 8")
+    private Integer lessonNumber;
 
-    public Integer getLessonNumber() {
-        return lessonNumber;
-    }
+    @NotNull(message = "ID Учителя не может быть пустым")
+    @Min(value = 1, message = "Некорректный ID Учителя (должен быть > 0)")
+    private Long teacherId;
 
-    public void setLessonNumber(Integer lessonNumber) {
-        this.lessonNumber = lessonNumber;
-    }
+    @NotNull(message = "ID дисциплины не может быть пустым")
+    @Min(value = 1, message = "Некорректный ID дисциплины (должен быть > 0)")
+    private Long subjectId;
 
-    public Long getTeacherId() {
-        return teacherId;
-    }
+    @NotNull(message = "ID группы не может быть пустым")
+    @Min(value = 1, message = "Некорректный ID группы (должен быть > 0)")
+    private Long groupId;
 
-    public void setTeacherId(Long teacherId) {
-        this.teacherId = teacherId;
-    }
-
-    public Long getSubjectId() {
-        return subjectId;
-    }
-
-    public void setSubjectId(Long subjectId) {
-        this.subjectId = subjectId;
-    }
-
-    public Long getGroupId() {
-        return groupId;
-    }
-
-    public void setGroupId(Long groupId) {
-        this.groupId = groupId;
-    }
+    public LocalDate getDate() { return date; }
+    public void setDate(LocalDate date) { this.date = date; }
+    public Integer getLessonNumber() { return lessonNumber; }
+    public void setLessonNumber(Integer lessonNumber) { this.lessonNumber = lessonNumber; }
+    public Long getTeacherId() { return teacherId; }
+    public void setTeacherId(Long teacherId) { this.teacherId = teacherId; }
+    public Long getSubjectId() { return subjectId; }
+    public void setSubjectId(Long subjectId) { this.subjectId = subjectId; }
+    public Long getGroupId() { return groupId; }
+    public void setGroupId(Long groupId) { this.groupId = groupId; }
 }

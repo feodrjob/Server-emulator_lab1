@@ -1,9 +1,13 @@
 package org.example.serveremulator.DTO;
 
+import jakarta.validation.constraints.NotNull;
+
 import java.util.List;
 
 public class AttendanceRequest {
+    @NotNull(message = "ID занятия не может быть пустым")
     private Long lessonId;
+    @NotNull(message = "список студентов не может быть Null")
     private List<Long> presentStudentIds;
 
     public Long getLessonId() {

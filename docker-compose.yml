@@ -7,7 +7,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: student_db      х
+      POSTGRES_DB: student_db
     ports:
-      - "5433:5432" # Прокидываем порт из контейнера компьютер
+      - "5433:5432" # Прокидываем порт из контейнера на компьютер
     restart: unless-stopped

@@ -164,15 +164,20 @@ public class StudentService {
                     "Student ID must be positive number"
             );
         }
-
+        //если нет кидает 404
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(
                         ErrorCode.STUDENT_NOT_FOUND,
                         "Student with id " + id + " not found"
-                ));
+                        ));
+        if (attendanceRepository.isStudentPresentInAnyAttendance(student)) {
+            throw new ValidationException(
+                    ErrorCode.STUDENT_DELETE_CONFLICT,
+                    "Student with id " + id + " is already deleted"
+            );
+        }
+        studentRepository.delete(student);
 
-        attendanceRepository.deleteStudentFromAllAttendances(student);
-        studentRepository.deleteById(id);
     }
 
     public boolean existsById(Long id) {

@@ -94,6 +94,23 @@ public class LessonMapper {
         logger.info("Response created: id={}, teacherName={}, subjectName={}, groupName={}",
                 response.getId(), response.getTeacherName(),
                 response.getSubjectName(), response.getGroupName());
+        //Проверяем запись о посещаемости
+        if (lesson.getAttendance() != null && lesson.getAttendance().getPresentStudents() != null) {
+            logger.debug("У занятия ID {} найдена посещаемость. Маппим студентов.", lesson.getId());
+
+            java.util.List<String> studentNames = lesson.getAttendance().getPresentStudents().stream()
+                    .map(student -> {
+                        String mName = student.getMiddleName();
+                        return student.getLastName() + " " +
+                                student.getFirstName() +
+                                (mName != null && !mName.isEmpty() ?" " + mName : "");
+                    })
+                    .collect(java.util.stream.Collectors.toList());
+            response.setPresentStudents(studentNames);
+        }else {
+            logger.debug("У занятия ID {} посещаемость отсутствует.", lesson.getId());
+            response.setPresentStudents(null);
+        }
 
         return response;
     }

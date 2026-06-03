@@ -1,6 +1,7 @@
 package org.example.serveremulator.Controllers;
 
 
+import jakarta.validation.Valid;
 import org.example.serveremulator.DTO.ApiResponse;
 import org.example.serveremulator.DTO.SubjectRequest;
 import org.example.serveremulator.DTO.SubjectResponse;
@@ -44,7 +45,7 @@ public class SubjectController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<SubjectResponse>> createSubject(@RequestBody SubjectRequest request) {
+    public ResponseEntity<ApiResponse<SubjectResponse>> createSubject(@Valid @RequestBody SubjectRequest request) {
         Subject subject = subjectMapper.toEntity(request);
         Subject createdSubject = subjectService.createSubject(subject);
         SubjectResponse subjectResponse = subjectMapper.toResponse(createdSubject);
@@ -54,7 +55,7 @@ public class SubjectController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<SubjectResponse>> updateSubject(@PathVariable Long id, @RequestBody SubjectRequest request) {
+    public ResponseEntity<ApiResponse<SubjectResponse>> updateSubject(@PathVariable Long id,@Valid @RequestBody SubjectRequest request) {
         Subject subject = subjectMapper.toEntity(request);
         Subject updatedSubject = subjectService.updateSubject(id, subject);
         SubjectResponse subjectResponse = subjectMapper.toResponse(updatedSubject);

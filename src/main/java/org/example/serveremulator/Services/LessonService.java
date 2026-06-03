@@ -3,6 +3,8 @@ package org.example.serveremulator.Services;
 import jakarta.transaction.Transactional;
 import org.example.serveremulator.Entityes.Lesson;
 import org.example.serveremulator.Repositories.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -29,9 +31,6 @@ public class LessonService {
         this.groupRepository = groupRepository;
     }
 
-    public List<Lesson> getAllLessons() {
-        return lessonRepository.findAll();
-    }
 
     public Lesson getLessonById(Long id) {
         if (id == null || id <= 0) {
@@ -48,66 +47,41 @@ public class LessonService {
                 ));
     }
 
-    public List<Lesson> getLessonsByTeacherId(Long teacherId, LocalDate startDate, LocalDate endDate) {
-        if (teacherId == null || teacherId <= 0) {
-            throw new ValidationException(
-                    ErrorCode.TEACHER_INVALID_ID,
-                    "Teacher ID must be positive number"
-            );
-        }
+    public Page<Lesson> getLessonFiltred(LocalDate startDate, LocalDate endDate, Long groupId, Long teacherId,  int page, int size) {
         if (startDate == null || endDate == null) {
             throw new ValidationException(
                     ErrorCode.VALIDATION_INVALID_DATE,
-                    "Dates cannot be null"
+                    "Lesson start date and end date must not be null"
             );
         }
         if (startDate.isAfter(endDate)) {
             throw new ValidationException(
                     ErrorCode.VALIDATION_INVALID_DATE,
-                    "Start date cannot be after end date"
+                    "Lesson start date must not be after end date"
             );
         }
-
-        if (!teacherRepository.existsById(teacherId)) {
-            throw new NotFoundException(
-                    ErrorCode.TEACHER_NOT_FOUND,
-                    "Teacher not found with id: " + teacherId
-            );
+        //существует ли группа если передали фильтр вдруг
+        if (groupId != null) {
+            if (!groupRepository.existsById(groupId)) {
+                throw new NotFoundException(
+                        ErrorCode.GROUP_NOT_FOUND,
+                        "Group with id " + groupId + " not found"
+                );
+            }
         }
-
-        return lessonRepository.findByTeacherIdAndDateBetween(teacherId, startDate, endDate);
+        //существует ли преподватель при фильтре
+        if(teacherId != null) {
+            if (!teacherRepository.existsById(teacherId)) {
+                throw new NotFoundException(
+                        ErrorCode.TEACHER_NOT_FOUND,
+                        "Teacher with id " + teacherId + " not found"
+                );
+            }
+        }
+        //Объект для пагинации
+        PageRequest pageRequest = PageRequest.of(page, size);
+        return lessonRepository.findLessonsWithFilters(startDate, endDate, groupId, teacherId, pageRequest);
     }
-
-    public List<Lesson> getLessonsByGroupId(Long groupId, LocalDate startDate, LocalDate endDate) {
-        if (groupId == null || groupId <= 0) {
-            throw new ValidationException(
-                    ErrorCode.GROUP_INVALID_ID,
-                    "Group ID must be positive number"
-            );
-        }
-        if (startDate == null || endDate == null) {
-            throw new ValidationException(
-                    ErrorCode.VALIDATION_INVALID_DATE,
-                    "Dates cannot be null"
-            );
-        }
-        if (startDate.isAfter(endDate)) {
-            throw new ValidationException(
-                    ErrorCode.VALIDATION_INVALID_DATE,
-                    "Start date cannot be after end date"
-            );
-        }
-
-        if (!groupRepository.existsById(groupId)) {
-            throw new NotFoundException(
-                    ErrorCode.GROUP_NOT_FOUND,
-                    "Group not found with id: " + groupId
-            );
-        }
-
-        return lessonRepository.findByGroupIdAndDateBetween(groupId, startDate, endDate);
-    }
-
     public Lesson createLesson(Lesson lesson) {
         if (lesson == null) {
             throw new ValidationException(

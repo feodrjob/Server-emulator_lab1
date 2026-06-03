@@ -108,6 +108,13 @@ public class SubjectService {
                         ErrorCode.SUBJECT_NOT_FOUND,
                         "Subject with id " + id + " not found"
                 ));
+        //есть ли занятия по этой дисциплине
+        if(!subject.getLessons().isEmpty()) {
+            throw new ValidationException(
+                    ErrorCode.SUBJECT_HAS_LESSONS,
+                    "Subject with id " + id + " has lessons"
+            );
+        }
 
         subjectRepository.delete(subject);
     }

@@ -1,6 +1,7 @@
 package org.example.serveremulator.Controllers;
 
 
+import jakarta.validation.Valid;
 import org.example.serveremulator.DTO.ApiResponse;
 import org.example.serveremulator.DTO.GroupRequest;
 import org.example.serveremulator.DTO.GroupResponse;
@@ -45,9 +46,12 @@ public class GroupController {
         ApiResponse<GroupResponse> response = new ApiResponse<>(true,groupResponse);
         return ResponseEntity.ok(response);
     }
-
+    /*
+    Через аннотацию Valid, указываем, что перед тем как отдать request
+    в метод createGroup, нам нужно проверить все аннтоации в DTО
+    */
     @PostMapping
-    public ResponseEntity<ApiResponse<GroupResponse>> createGroup(@RequestBody GroupRequest request) {
+    public ResponseEntity<ApiResponse<GroupResponse>> createGroup(@Valid @RequestBody GroupRequest request) {
         Group group = groupMapper.toEntity(request);
         Group createdGroup = groupService.createGroup(group);
         GroupResponse groupResponse = groupMapper.toResponse(createdGroup);
@@ -57,7 +61,7 @@ public class GroupController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<GroupResponse>> updateGroup(@PathVariable Long id, @RequestBody GroupRequest request) {
+    public ResponseEntity<ApiResponse<GroupResponse>> updateGroup(@PathVariable Long id,@Valid @RequestBody GroupRequest request) {
         Group group = groupMapper.toEntity(request);
         Group updatedGroup = groupService.updateGroup(id, group);
         GroupResponse groupResponse = groupMapper.toResponse(updatedGroup);

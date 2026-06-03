@@ -3,8 +3,13 @@ package org.example.serveremulator.Exceptions;
 import org.example.serveremulator.Enums.ErrorCode;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -48,5 +53,28 @@ public class GlobalExceptionHandler {
                 e.getMessage()
         );
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
+
+        // Создаем пустой список, куда будем складывать все тексты ошибок
+        List<String> details = new ArrayList<>();
+
+        // Проходимся по всем ошибкам, которые нашел Spring
+        for (FieldError error : ex.getBindingResult().getFieldErrors()) {
+            // Формируем строчку вида: "название_поля: текст_ошибки"
+            details.add(error.getField() + ": " + error.getDefaultMessage());
+        }
+
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                ErrorCode.VALIDATION_ERROR.getCode(),
+                "Ошибка валидации входных данных",
+                details
+        );
+
+        // Возвращаем статус 400 Bad Request
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
 }

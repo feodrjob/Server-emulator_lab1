@@ -7,6 +7,7 @@ import org.example.serveremulator.Enums.ErrorCode;
 import org.example.serveremulator.Exceptions.NotFoundException;
 import org.example.serveremulator.Exceptions.ValidationException;
 import org.example.serveremulator.Repositories.GroupRepository;
+import org.example.serveremulator.Repositories.StudentRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,9 +16,11 @@ import java.util.List;
 @Transactional
 public class GroupService {
     private final GroupRepository groupRepository;
+    private final StudentRepository studentRepository;
 
-    public GroupService(GroupRepository groupRepository) {
+    public GroupService(GroupRepository groupRepository, StudentRepository studentRepository) {
         this.groupRepository = groupRepository;
+        this.studentRepository = studentRepository;
     }
 
     public List<Group> getAllGroups() {
@@ -111,6 +114,21 @@ public class GroupService {
                         ErrorCode.GROUP_NOT_FOUND,
                         "Группа с ID " + id + " не найдена"
                 ));
+
+        if (!group.getStudents().isEmpty()) {
+            throw new ValidationException(
+                    ErrorCode.GROUP_HAS_STUDENTS,
+                    "Невозможно удалить группу, так как в ней еще числятся студенты. Колличество: " + group.getStudents().size()
+            );
+        }
+
+        if (!group.getLessons().isEmpty()) {
+            throw new ValidationException(
+                    ErrorCode.GROUP_HAS_LESSONS,
+                    "Нельзя удалить группу - у нее уже созданы занятия в расписании"
+            );
+
+        }
 
         groupRepository.delete(group);
     }
