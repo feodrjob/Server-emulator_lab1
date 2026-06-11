@@ -11,3 +11,4 @@ public class ServerEmulatorApplication {
     }
 
 }
+//токен eyJyb2xlIjoiUk9MRV9TVFVERU5UIiwic3ViIjoidGVzdHVzZXIiLCJpYXQiOjE3ODExOTU2OTAsImV4cCI6MTc4MTE5OTI5MH0
