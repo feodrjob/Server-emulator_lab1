@@ -34,10 +34,11 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         //зарегаться и авторизоваться могут все
                         .requestMatchers("/api/auth/**").permitAll()
-                        //остальные запросы требуют токен
-                        .anyRequest().authenticated()
                         //доступ сваггеру
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        //остальные запросы требуют токен
+                        .anyRequest().authenticated()
+
 
                 )
                 // не сбудем создавать сессии

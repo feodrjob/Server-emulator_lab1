@@ -47,7 +47,6 @@ public class Group {
         this.name = name;
     }
 
-    // Геттеры для связей
     public List<Student> getStudents() {
         return students;
     }
@@ -56,7 +55,6 @@ public class Group {
         return lessons;
     }
 
-    // Методы для управления связями
     public void addStudent(Student student) {
         students.add(student);
         student.setGroup(this);
