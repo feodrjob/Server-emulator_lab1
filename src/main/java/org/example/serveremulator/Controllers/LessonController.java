@@ -11,16 +11,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.time.LocalDate;
-import java.util.List;
-import java.util.stream.Collectors;
-
-
-import org.springframework.web.bind.annotation.*;
-
 
 @RestController
 @RequestMapping("/api/lessons")
@@ -34,24 +30,29 @@ public class LessonController {
         this.lessonMapper = lessonMapper;
     }
 
+    // просматривать расписание могут все
     @GetMapping
+    @PreAuthorize("hasAnyRole('STUDENT', 'TEACHER', 'ADMIN')")
     public ResponseEntity<ApiResponse<Page<LessonResponse>>> getLessons(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
-            @RequestParam(required = false) Long groupId,     // Необязательный фильтр
-            @RequestParam(required = false) Long teacherId,   // Необязательный фильтр
-            @RequestParam(defaultValue = "0") int page,       // Пагинация: номер страницы (с 0)
-            @RequestParam(defaultValue = "10") int size       // Пагинация: размер страницы
+            @RequestParam(required = false) Long groupId,     // необязательный фильтр
+            @RequestParam(required = false) Long teacherId,   // необязательный фильтр
+            @RequestParam(defaultValue = "0") int page,       // пагинация: номер страницы
+            @RequestParam(defaultValue = "10") int size       // пагинация: размер страницы
     ) {
-        //получаем фильтрованные данные
+        // получение отфильтрованных данных
         Page<Lesson> lessonPage = lessonService.getLessonFiltred(startDate, endDate, groupId, teacherId, page, size);
-        //оборачиваем в ответ
+
+        // упаковка ответа
         Page<LessonResponse> responsePage = lessonPage.map(lessonMapper::toResponse);
         ApiResponse<Page<LessonResponse>> response = new ApiResponse<>(true, responsePage);
         return ResponseEntity.ok(response);
     }
 
+    // смотреть конкретное занятие могут все
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('STUDENT', 'TEACHER', 'ADMIN')")
     public ResponseEntity<ApiResponse<LessonResponse>> getLessonById(@PathVariable Long id) {
         Lesson lesson = lessonService.getLessonById(id);
         LessonResponse lessonResponse = lessonMapper.toResponse(lesson);
@@ -60,36 +61,35 @@ public class LessonController {
         return ResponseEntity.ok(response);
     }
 
+    // создавать занятия могут преподаватели и админы
     @PostMapping
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
     public ResponseEntity<ApiResponse<LessonResponse>> createLesson(@Valid @RequestBody LessonRequest request) {
-        logger.info("POST /api/lessons - Создание занятия. Request: {}", request);
 
         Lesson lesson = lessonMapper.toEntity(request);
-        logger.info("Создана сущность Lesson: id={}, date={}, lessonNumber={}",
-                lesson.getId(), lesson.getDate(), lesson.getLessonNumber());
+
 
         Lesson createdLesson = lessonService.createLesson(lesson);
-        logger.info("Сохранена в БД Lesson с id: {}", createdLesson.getId());
 
-        // Перезагружаем с деталями
+        // перезагрузка данных с деталями из базы
         Lesson lessonWithDetails = lessonService.getLessonById(createdLesson.getId());
-        logger.info("Перезагружена Lesson с деталями. Teacher: {}, Subject: {}, Group: {}",
-                lessonWithDetails.getTeacher(),
-                lessonWithDetails.getSubject(),
-                lessonWithDetails.getGroup());
+
 
         LessonResponse response = lessonMapper.toResponse(lessonWithDetails);
-        logger.info("Создан Response: {}", response);
 
         ApiResponse<LessonResponse> apiResponse = new ApiResponse<>(true, response);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(apiResponse);
     }
 
+    // редактировать занятия могут преподаватели и админы
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<LessonResponse>> updateLesson(@PathVariable Long id,@Valid @RequestBody LessonRequest request) {
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
+    public ResponseEntity<ApiResponse<LessonResponse>> updateLesson(@PathVariable Long id, @Valid @RequestBody LessonRequest request) {
         Lesson lesson = lessonMapper.toEntity(request);
         Lesson updatedLesson = lessonService.updateLesson(id, lesson);
+
+        // перезагрузка данных
         Lesson lessonWithDetails = lessonService.getLessonById(updatedLesson.getId());
         LessonResponse lessonResponse = lessonMapper.toResponse(lessonWithDetails);
 
@@ -97,10 +97,14 @@ public class LessonController {
         return ResponseEntity.ok(response);
     }
 
+    // удалять занятия может только админ
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteLesson(@PathVariable Long id) {
         lessonService.deleteLesson(id);
-        ApiResponse<Void> response = new ApiResponse<>(true,null);
+
+        // данных для возврата нет, отдаем null
+        ApiResponse<Void> response = new ApiResponse<>(true, null);
         return ResponseEntity.ok(response);
     }
 }

@@ -10,10 +10,8 @@ import org.example.serveremulator.Services.TeacherService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/teachers")
@@ -26,21 +24,25 @@ public class TeacherController {
         this.teacherMapper = teacherMapper;
     }
 
+    // просмотр всех преподавателей доступен всем
     @GetMapping
+    @PreAuthorize("hasAnyRole('STUDENT', 'TEACHER', 'ADMIN')")
     public ResponseEntity<ApiResponse<Page<TeacherResponse>>> getAllTeachers(
-            // ищем параметры в url
+            // параметры из url
             @RequestParam(defaultValue = "0") int page,
-            // дефолт параметры если пользоватеь забыл указать параметры
+            // значения по умолчанию для пагинации
             @RequestParam(defaultValue = "10") int size
-            ) {
-        // получаем страницу из базы
+    ) {
+        // получение страницы из базы
         Page<Teacher> teacherPage = teacherService.findAll(page, size);
         Page<TeacherResponse> responsePage = teacherPage.map(teacherMapper::toResponse);
         ApiResponse<Page<TeacherResponse>> apiResponse = new ApiResponse<>(true, responsePage);
         return ResponseEntity.ok(apiResponse);
     }
 
+    // просмотр конкретного преподавателя доступен всем
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('STUDENT', 'TEACHER', 'ADMIN')")
     public ResponseEntity<ApiResponse<TeacherResponse>> getTeacher(@PathVariable Long id) {
         Teacher teacher = teacherService.findById(id);
         TeacherResponse teacherResponse = teacherMapper.toResponse(teacher);
@@ -49,7 +51,9 @@ public class TeacherController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    // добавление профиля преподавателя доступно только админу
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<TeacherResponse>> createTeacher(@Valid @RequestBody TeacherRequest request) {
         Teacher teacher = teacherMapper.toEntity(request);
         Teacher createdTeacher = teacherService.createTeacher(teacher);
@@ -59,8 +63,10 @@ public class TeacherController {
         return ResponseEntity.status(HttpStatus.CREATED).body(apiResponse);
     }
 
+    // редактирование профиля преподавателя доступно только админу
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<TeacherResponse>> updateTeacher(@PathVariable Long id,@Valid @RequestBody TeacherRequest request) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<TeacherResponse>> updateTeacher(@PathVariable Long id, @Valid @RequestBody TeacherRequest request) {
         Teacher teacher = teacherMapper.toEntity(request);
         Teacher updatedTeacher = teacherService.updateTeacher(id, teacher);
         TeacherResponse teacherResponse = teacherMapper.toResponse(updatedTeacher);
@@ -69,7 +75,9 @@ public class TeacherController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    // удаление преподавателя доступно только админу
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteTeacher(@PathVariable Long id) {
         teacherService.deleteTeacher(id);
 

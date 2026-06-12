@@ -11,3 +11,16 @@ services:
     ports:
       - "5433:5432" # Прокидываем порт из контейнера на компьютер
     restart: unless-stopped
+
+
+app:
+  build: .
+  ports:
+    - "8080:8080"
+  depends_on:
+    - db
+  environment:
+    # указываем приложению, как достучаться до базы внутри докера
+    - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/mydb
+    - SPRING_DATASOURCE_USERNAME=myuser
+    - SPRING_DATASOURCE_PASSWORD=mypassword

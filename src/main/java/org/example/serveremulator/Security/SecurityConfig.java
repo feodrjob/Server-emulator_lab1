@@ -13,11 +13,12 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.AuthenticationConverter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
     private final JwtRequestFilter jwtRequestFilter;
     public SecurityConfig(JwtRequestFilter jwtRequestFilter) {
@@ -35,6 +36,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         //остальные запросы требуют токен
                         .anyRequest().authenticated()
+                        //доступ сваггеру
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+
                 )
                 // не сбудем создавать сессии
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
