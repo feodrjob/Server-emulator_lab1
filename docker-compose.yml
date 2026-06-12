@@ -1,26 +1,24 @@
-version: '3.8'
-
 services:
-  postgres-db:
+  db:
     image: postgres:15-alpine
     container_name: student_postgres
+    env_file: .env
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: student_db
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     ports:
-      - "5433:5432" # Прокидываем порт из контейнера на компьютер
-    restart: unless-stopped
+      - "5433:5432"
 
-
-app:
-  build: .
-  ports:
-    - "8080:8080"
-  depends_on:
-    - db
-  environment:
-    # указываем приложению, как достучаться до базы внутри докера
-    - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/mydb
-    - SPRING_DATASOURCE_USERNAME=myuser
-    - SPRING_DATASOURCE_PASSWORD=mypassword
+  app:
+    build: .
+    container_name: student_app
+    env_file: .env
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/${DB_NAME}
+      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
